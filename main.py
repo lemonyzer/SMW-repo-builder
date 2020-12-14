@@ -1,4 +1,5 @@
 # This is a sample Python script.
+import datetime
 import platform
 import time
 import operator
@@ -19,6 +20,8 @@ def isDirectoryEntryRelevant(entry):
     if entry[-4:].casefold() == ".rar":
         if len(entry) >= 10:
             return True
+    return False
+
 
 def workWithFilelist(systemPath):
     entries = os.listdir(systemPath)
@@ -33,6 +36,25 @@ def workWithFilelist(systemPath):
             projSystemPath = systemPath + "\\" + entry
             currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, entry)
             projects.append(currentProject)
+
+    # List all subdirectories using os.listdir
+    basepath = systemPath
+    for entry in os.listdir(basepath):
+        if os.path.isdir(os.path.join(basepath, entry)):
+            print("Checking subdirectory {}...".format(os.path.join(basepath, entry)))
+
+            subdirectory = os.path.join(basepath, entry)
+            subentries = os.listdir(subdirectory)
+            for subentry in subentries:
+                if isDirectoryEntryRelevant(subentry):
+                    # projTimestamp = getTimestampFromFilename(entry)
+
+                    projTimestamp = getTimestampFromFilesystem(os.path.join(subdirectory, subentry))
+                    projName = getProjectNameFromFilename(entry)
+                    projInfo = getProjectAdditionalInfoFromFilename(subentry)
+                    projSystemPath = os.path.join(subdirectory, subentry)
+                    currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, subentry)
+                    projects.append(currentProject)
 
     print("{:<30}: {}".format("numberOfFiles", len(entries)))
     print("{:<30}: {}".format("numberOfProjects", len(projects)))
@@ -49,12 +71,22 @@ def showProjects():
 
 def getTimestampFromFilename(fileName):
     # split string with " ", 1 time => list with 2 itmes
-    data = fileName.split(" ", 1)
-    # timestamp format: 10 characters
-    ## 123456789T
-    ## 2014.08.08
-    if len(data) > 1:
-        return data[1][0:10]
+    #123456789012345
+    #SuperMarioWars 2014
+    #SuperMarioWars_2014
+    if len(fileName) > 15:
+        splitChar = ""
+        if fileName[14] == " ":
+            splitChar = fileName[14]
+        elif fileName[14] == "_":
+            splitChar = fileName[14]
+
+        data = fileName.split(splitChar, 1)
+        # timestamp format: 10 characters
+        ## 123456789T
+        ## 2014.08.08
+        if len(data) > 1:
+            return data[1][0:10]
     return "0000.00.00"
 
 def modified_date(path_to_file):
@@ -106,6 +138,13 @@ def getProjectAdditionalInfoFromFilename(fileName):
     if len(data) > 1:
         return data[1][10:]
     return ""
+
+def printProjects(list):
+    for p in list:
+        timestamp = p.timestamp
+        local_time = time.ctime(timestamp)
+        rfc2822 = formatdate(timestamp, True)
+        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -163,33 +202,20 @@ if __name__ == '__main__':
         if p.israrfile:
             numOfRarFiles = numOfRarFiles + 1
 
-    if True:
-        print("{:<30}: {}".format("numOfRarFiles", numOfRarFiles))
-        print("rootFolders")
-        print(set(rootFolders))  # hide duplicates from list
-
-        print("{:<130} {:^9} ".format("file", "root folder"))
-        for p in projects:
-            print("{:<130} {:^9} ".format(p.fileName, p.rarRootFolder))
-
-
     #testProjectList = list()
 
-    print("projects")
-    for p in projects:
-        timestamp = p.timestamp
-        local_time = time.ctime(timestamp)
-        rfc2822 = formatdate(timestamp, True)
-        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
+    showProjects = False
+
+    if showProjects:
+        print("projects")
+        printProjects(projects)
 
     #projects.sort(key=operator.attrgetter('timestamp'))    # inline sorting
     projectsSorted = sorted(projects, key=operator.attrgetter('timestamp'))  # sort copy
 
-    print("projects")
-    for p in projectsSorted:
-        timestamp = p.timestamp
-        local_time = time.ctime(timestamp)
-        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
+    if showProjects:
+        print("projects Sorted")
+        printProjects(projectsSorted)
 
     print("compare projects lists")
     for i in range(len(projectsSorted)):
@@ -204,8 +230,50 @@ if __name__ == '__main__':
 
 
 
-    #print(rarfile.getinfo(testList[0]))
+    showRARArchiveRootFolder = True
+    if showRARArchiveRootFolder:
+        print("{:<30}: {}".format("numOfRarFiles", numOfRarFiles))
+        print("RAR rootFolders")
+        for item in set(rootFolders):
+            print("\t{}".format(item))  # hide duplicates from list
 
+        print("{:<130} {:^9} ".format("file", "root folder"))
+        for p in projectsSorted:
+            print("{:<130} {:^9} ".format(p.fileName, p.rarRootFolder))
+
+    ## compare timestamps
+    print()
+    print("{:<12} {:<3} {:<12} {}".format("fileName", " ", "fileSystem", "p.fileName"))
+    for p in projectsSorted:
+        fileNameTimestamp = getTimestampFromFilename(p.fileName)
+        # 2015.04.18
+
+        # p.timestamp -> convert
+        # CONVERT tutorial: https://timestamp.online/article/how-to-convert-timestamp-to-datetime-in-python
+        ##fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+        ## ISO Format
+        ## 2020-12-04T10:54:42+01:00
+        #dtts = datetime(p.timestamp)
+        #https://www.programiz.com/python-programming/datetime (Example 5: Get date from a timestamp)
+        timestamp = datetime.date.fromtimestamp(p.timestamp)
+        fileSystemTimestamp = timestamp.strftime("%Y.%m.%d")
+
+        compareresult = "NA"
+        if fileNameTimestamp == fileSystemTimestamp:
+            compareresult = "==="
+        else:
+            compareresult = "!!!"
+        print("{:<12} {} {:<12} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
+
+    ##
+    ##  Workflow
+    #       RAR Extraction
+    #       File Moving
+    #       git adding
+    #       git commiting
+    ##
+
+    print("WorkFlow Part ....")
     fileName = files[1]
     projectFilePath = systemPath + "\\" + fileName
     rarf = rarfile.RarFile(projectFilePath)
