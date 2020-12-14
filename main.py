@@ -2,6 +2,7 @@
 import platform
 import time
 import operator
+from email.utils import formatdate
 
 from project import Project
 import os
@@ -180,7 +181,8 @@ if __name__ == '__main__':
     for e in testList:
         timestamp = getTimestampFromFilesystem(systemPath + "\\" + e)
         local_time = time.ctime(timestamp)
-        print("{:<18} - {} - {}".format(timestamp, local_time, e))
+        rfc2822 = formatdate(timestamp, True)
+        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, e))
 
     testProjectList = list()
     testProjectList.append(projects[6])

@@ -13,10 +13,10 @@ class Project:
         self.rarRootFolder = ""
 
     def say_state(self):
-        print("timestamp=\t\t\t{}".format(self.timestamp))
-        print("systemFilePath=\t\t{}".format(self.systemFilePath))
-        print("shortDescription=\t{}".format(self.shortDescription))
-        print("longDescription=\t{}".format(self.longDescription))
+        print("{:<30}: {}".format("timestamp", self.timestamp))
+        print("{:<30}: {}".format("systemFilePath", self.systemFilePath))
+        print("{:<30}: {}".format("shortDescription", self.shortDescription))
+        print("{:<30}: {}".format("longDescription", self.longDescription))
 
     def setTimestamp(self, newTimestamp):
         self.timestamp = newTimestamp
