@@ -130,7 +130,8 @@ if __name__ == '__main__':
     projects = list()
     files = list()
 
-    systemPath = "D:\\_temp"
+    systemPath = "D:\\_delete\\SuperMarioWars"
+#    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreationResume"
@@ -162,7 +163,7 @@ if __name__ == '__main__':
         if p.israrfile:
             numOfRarFiles = numOfRarFiles + 1
 
-    if False:
+    if True:
         print("{:<30}: {}".format("numOfRarFiles", numOfRarFiles))
         print("rootFolders")
         print(set(rootFolders))  # hide duplicates from list
@@ -172,37 +173,36 @@ if __name__ == '__main__':
             print("{:<130} {:^9} ".format(p.fileName, p.rarRootFolder))
 
 
-    testList = list()
-    testList.append(files[1])
-    testList.append(files[6])
-    testList.append(files[3])
+    #testProjectList = list()
 
-    print("testList")
-    for e in testList:
-        timestamp = getTimestampFromFilesystem(systemPath + "\\" + e)
+    print("projects")
+    for p in projects:
+        timestamp = p.timestamp
         local_time = time.ctime(timestamp)
         rfc2822 = formatdate(timestamp, True)
-        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, e))
+        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
-    testProjectList = list()
-    testProjectList.append(projects[6])
-    testProjectList.append(projects[1])
-    testProjectList.append(projects[6])
-    testProjectList.append(projects[3])
+    #projects.sort(key=operator.attrgetter('timestamp'))    # inline sorting
+    projectsSorted = sorted(projects, key=operator.attrgetter('timestamp'))  # sort copy
 
-    print("testProjectList")
-    for p in testProjectList:
+    print("projects")
+    for p in projectsSorted:
         timestamp = p.timestamp
         local_time = time.ctime(timestamp)
-        print("{:<18} - {} - {}".format(timestamp, local_time, p.fileName))
+        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
-    testProjectList.sort(key=operator.attrgetter('timestamp'))
+    print("compare projects lists")
+    for i in range(len(projectsSorted)):
+        p = projects[i].fileName
+        ps = projectsSorted[i].fileName
+        compareresult = "not tested"
+        if p == ps:
+            compareresult = "==="
+        else:
+            compareresult = "!!!"
+        print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
-    print("testProjectList")
-    for p in testProjectList:
-        timestamp = p.timestamp
-        local_time = time.ctime(timestamp)
-        print("{:<18} - {} - {}".format(timestamp, local_time, p.fileName))
+
 
     #print(rarfile.getinfo(testList[0]))
 
@@ -216,7 +216,7 @@ if __name__ == '__main__':
 
     if "rootFolderInRARArchive" == "rootFolderInRARArchive":  # == repoName
         # extract
-        print("Extract ...")
+        print("Extract {} ...".format(projectFilePath))
         # rarf.extractall(systemPathRepo)
 
 

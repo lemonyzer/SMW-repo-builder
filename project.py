@@ -8,9 +8,12 @@ class Project:
         self.shortDescription = shortDescription
         self.systemFilePath = systemFilePath
         self.fileName = fileName
-        self.longDescription = systemFilePath + "\n" + projName + "\n" + str(timestamp) + "\n" + shortDescription
+
         self.israrfile = False
         self.rarRootFolder = ""
+
+    def longDescription(self):
+        return self.systemFilePath + "\n" + self.name + "\n" + str(self.timestamp) + "\n" + self.shortDescription
 
     def say_state(self):
         print("{:<30}: {}".format("timestamp", self.timestamp))
