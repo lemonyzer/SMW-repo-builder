@@ -11,6 +11,13 @@ class Project:
 
         self.israrfile = False
         self.rarRootFolder = ""
+        self.rootElements = set()
+
+    def setRootElements(self, newSet):
+        self.rootElements = newSet
+
+    def getRootElements(self):
+        return self.rootElements
 
     def longDescription(self):
         return self.systemFilePath + "\n" + self.name + "\n" + str(self.timestamp) + "\n" + self.shortDescription

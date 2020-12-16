@@ -270,10 +270,10 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
 
 def rootElements(list):
-    rootElements = set()
+    rootelements = set()
     for item in list:
-        rootElements.add(item.split("\\")[0])
-    return rootElements
+        rootelements.add(item.split("\\")[0])
+    return rootelements
 
 
 # Press the green button in the gutter to run the script.
@@ -316,6 +316,8 @@ if __name__ == '__main__':
 
     systemPathRepo = "D:\\_temp_dev"
 
+    printRarDetails = False
+
     rootFolders = list()
     for p in projects:
         if rarfile.is_rarfile(p.systemFilePath):
@@ -323,16 +325,18 @@ if __name__ == '__main__':
             rar = rarfile.RarFile(p.systemFilePath)
             #print(rar.namelist())
             print("{:<30}: {}".format("p.fileName", p.fileName))
-            print("{:<30}: {}".format("rar.namelist()", ""))
-            for file in rar.namelist():
-                if not "Assets" in file:
-                    if not "Library" in file:
-                        print("{:<30}: {}".format("", file))
+            if printRarDetails:
+                print("{:<30}: {}".format("rar.namelist()", ""))
+                for file in rar.namelist():
+                    if not "Assets" in file:
+                        if not "Library" in file:
+                            print("{:<30}: {}".format("", file))
 
             #print(rar.printdir())
             rootelements = rootElements(rar.namelist())
-            print("{:<30}: {}".format("rootelements", ""))
-            for el in rootelements:
+            p.setRootElements(rootelements)
+            print("{:<30}: {}".format("rootelements", len(p.getRootElements())))
+            for el in p.getRootElements():
                 print("{:<30}: {}".format("", el))
 
             rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]
@@ -340,15 +344,17 @@ if __name__ == '__main__':
             print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
             print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
             #test = rarfile.RarInfo()
-            print("{:<30}: {}".format("date_time", rar.getinfo(rootFolderInRARArchive).date_time))
-            print("{:<30}: {}".format("filename", rar.getinfo(rootFolderInRARArchive).filename))
-#            print("{:<30}: {}".format("compress_type", rar.getinfo(rootFolderInRARArchive).compress_type))
-            print("{:<30}: {}".format("comment", rar.getinfo(rootFolderInRARArchive).comment))
-            print("{:<30}: {}".format("create_system", rar.getinfo(rootFolderInRARArchive).create_system))
-            print("{:<30}: {}".format("extract_version", rar.getinfo(rootFolderInRARArchive).extract_version))
-            print("{:<30}: {}".format("flag_bits", rar.getinfo(rootFolderInRARArchive).flag_bits))
-            print("{:<30}: {}".format("CRC", rar.getinfo(rootFolderInRARArchive).CRC))
-            print("{:<30}: {}".format("rar.getinfo(rootFolderInRARArchive)", rar.getinfo(rootFolderInRARArchive)))
+            if printRarDetails:
+                print("{:<30}: {}".format("getinfo()", rootFolderInRARArchive))
+                print("{:<30} {:<30}: {}".format("", "date_time", rar.getinfo(rootFolderInRARArchive).date_time))
+                print("{:<30} {:<30}: {}".format("", "filename", rar.getinfo(rootFolderInRARArchive).filename))
+                #print("{:<30} {:<30}: {}".format("", "compress_type", rar.getinfo(rootFolderInRARArchive).compress_type))
+                print("{:<30} {:<30}: {}".format("", "comment", rar.getinfo(rootFolderInRARArchive).comment))
+                print("{:<30} {:<30}: {}".format("", "create_system", rar.getinfo(rootFolderInRARArchive).create_system))
+                print("{:<30} {:<30}: {}".format("", "extract_version", rar.getinfo(rootFolderInRARArchive).extract_version))
+                print("{:<30} {:<30}: {}".format("", "flag_bits", rar.getinfo(rootFolderInRARArchive).flag_bits))
+                print("{:<30} {:<30}: {}".format("", "CRC", rar.getinfo(rootFolderInRARArchive).CRC))
+                print("{:<30} {:<30}: {}".format("", "rar.getinfo(rootFolderInRARArchive)", rar.getinfo(rootFolderInRARArchive)))
             #print(rar.infolist())
             print()
             p.rarRootFolder = rootFolderInRARArchive
@@ -397,9 +403,9 @@ if __name__ == '__main__':
         for item in set(rootFolders):
             print("\t{}".format(item))  # hide duplicates from list
 
-        print("{:<130} {:^9} ".format("file", "root folder"))
+        print("{:<130} {:<30} {}".format("file", "root folder", "amount of root Elements"))
         for p in projectsSorted:
-            print("{:<130} {:^9} ".format(p.fileName, p.rarRootFolder))
+            print("{:<130} {:<30} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))
 
     ## compare timestamps
     print()
