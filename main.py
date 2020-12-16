@@ -146,6 +146,133 @@ def printProjects(list):
         rfc2822 = formatdate(timestamp, True)
         print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
+def gitInitRepo():
+    gitCommand("git init")
+    sysCommand("copy .gitignore")
+    gitCommand("git add - a")
+    gitCommand("git commit")
+
+def gitCommand(cmd):
+    print(cmd)
+
+def sysCommand(cmd):
+    print(cmd)
+
+def removeAllProjectFilesFromRepo(repoSystemPath):
+    # keep
+    #.git/
+    #.gitignore
+    sysCommand("rm {} -r -e:.git .gitignore".format(repoSystemPath))
+
+def isRarRootFolderRepoFolder(project):
+
+    valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
+
+    if project.rarRootFolder in valid:
+        return True
+    else:
+        return False
+
+def systemPathExists(systemPath):
+    sysCommand(systemPath + "exists?" + os.path.isdir(systemPath))
+    #return os.path.isdir(os.path.join(basepath, entry))
+    return os.path.isdir(systemPath)
+
+def gitRepoExists(systemPath):
+    # Option A:
+    gitCommand("git status")
+    if "git status == ....":
+        a = True
+    else:
+        a = False
+
+    # Option B:
+    b = systemPathExists(systemPath + "\\.git")
+
+    return a
+
+def extractProject(proj, extractTargetSystemPath):
+    #rarf = rarfile.RarFile(projectFilePath)
+    #rarf.extractall(systemPathRepo)
+    sysCommand("rarf.extractall({})".format(extractTargetSystemPath))
+
+def workflow(projectList, extractTargetSystemPath, repoSystemPath):
+
+    if not systemPathExists(extractTargetSystemPath):
+        sysCommand("create dir " + extractTargetSystemPath)
+
+    if not gitRepoExists(repoSystemPath):
+        gitInitRepo(repoSystemPath)
+
+
+    if systemPathExists(extractTargetSystemPath) and gitRepoExists(repoSystemPath):
+
+        for p in projectList:
+            ## clean up
+            removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
+
+            extractProject(p, extractTargetSystemPath)  # /projects/<rar-filename>/
+            ## extractTargetSystemPath
+            ##  |
+            ##  |-<rar filename of Project 0>
+            ##  |    |
+            ##  |    |-<rarRootFolder>
+            ##  |
+            ##  |-<rar filename of Project 1>
+            ##  |     |
+            ##  |     |-<rarRootFolder>
+            ##
+
+            ## A) if only one folder and NO files exists in root of extracted project
+            ## if rarRootFolder exists
+            ##
+            ## B) if root folder name == ...
+            ## if rarRootFolder
+            ##      == valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
+            ##
+            ## C) [DYNAMIC] search for Assets folder
+            ## if folder "Assets" exists in current dir
+            #########
+            #### 0 cd rarRootFolder
+            #### 1 search for folder ".\Assets"
+            #### 2 if "Assets" found stop cd, use cd as base dir
+            #### 3 if "Assets" not found, search recursive
+            #### 4 for dir in dirlist cd dir and step 1
+            #########
+##
+            ## simple
+            # cd rarRootFolder
+            # if dirList.len() === 1:
+            #   if dirList[0] === "Assets" || dirList[0] === "Maps" || dirList[0] === "MapRawCreationWithoutValidTilesetToLokalTranslation" || dirList[0] === "27.09. Umzug Patrick Miriam"
+            #      -> use cd, move all files to repo
+            #   else:
+            #      cd subdir
+            #      -> use subdir, move all files to repo
+            #
+            # else:     # mehr als ein Unter Ordner in RAR-Archiv
+            #   print("cd hat mehr als ein Ordner")
+            #   use cd, move all files to repo
+            #
+##
+
+            ## if rarRootFolder
+            #analyseExtractedFolder(p, extractTargetSystemPath)
+
+            # normal:
+            # cd rarRootFolder
+            # rarRootFolder\* -> repo\*
+            # move all files inside rootFolder to repoFolder
+
+            if isRarRootFolderRepoFolder(p):
+                sysCommand("cd to extracted project folder")
+
+            if(rarRootFolder):
+                sysCommand("cd to extracted project folder")
+
+
+
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
