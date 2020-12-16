@@ -266,11 +266,14 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             if isRarRootFolderRepoFolder(p):
                 sysCommand("cd to extracted project folder")
 
-            if(rarRootFolder):
-                sysCommand("cd to extracted project folder")
 
 
 
+def rootElements(list):
+    rootElements = set()
+    for item in list:
+        rootElements.add(item.split("\\")[0])
+    return rootElements
 
 
 # Press the green button in the gutter to run the script.
@@ -296,7 +299,8 @@ if __name__ == '__main__':
     projects = list()
     files = list()
 
-    systemPath = "D:\\_delete\\SuperMarioWars"
+    #systemPath = "D:\\_delete\\SuperMarioWars"
+    systemPath = "D:\\_delete\\test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
@@ -317,7 +321,36 @@ if __name__ == '__main__':
         if rarfile.is_rarfile(p.systemFilePath):
             p.israrfile = True
             rar = rarfile.RarFile(p.systemFilePath)
+            #print(rar.namelist())
+            print("{:<30}: {}".format("p.fileName", p.fileName))
+            print("{:<30}: {}".format("rar.namelist()", ""))
+            for file in rar.namelist():
+                if not "Assets" in file:
+                    if not "Library" in file:
+                        print("{:<30}: {}".format("", file))
+
+            #print(rar.printdir())
+            rootelements = rootElements(rar.namelist())
+            print("{:<30}: {}".format("rootelements", ""))
+            for el in rootelements:
+                print("{:<30}: {}".format("", el))
+
             rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]
+
+            print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
+            print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
+            #test = rarfile.RarInfo()
+            print("{:<30}: {}".format("date_time", rar.getinfo(rootFolderInRARArchive).date_time))
+            print("{:<30}: {}".format("filename", rar.getinfo(rootFolderInRARArchive).filename))
+#            print("{:<30}: {}".format("compress_type", rar.getinfo(rootFolderInRARArchive).compress_type))
+            print("{:<30}: {}".format("comment", rar.getinfo(rootFolderInRARArchive).comment))
+            print("{:<30}: {}".format("create_system", rar.getinfo(rootFolderInRARArchive).create_system))
+            print("{:<30}: {}".format("extract_version", rar.getinfo(rootFolderInRARArchive).extract_version))
+            print("{:<30}: {}".format("flag_bits", rar.getinfo(rootFolderInRARArchive).flag_bits))
+            print("{:<30}: {}".format("CRC", rar.getinfo(rootFolderInRARArchive).CRC))
+            print("{:<30}: {}".format("rar.getinfo(rootFolderInRARArchive)", rar.getinfo(rootFolderInRARArchive)))
+            #print(rar.infolist())
+            print()
             p.rarRootFolder = rootFolderInRARArchive
             rootFolders.append(rootFolderInRARArchive)
         else:
@@ -402,17 +435,20 @@ if __name__ == '__main__':
 
     print("WorkFlow Part ....")
     fileName = files[1]
+    print("{:<30}: {}".format("fileName", fileName))
     projectFilePath = systemPath + "\\" + fileName
-    rarf = rarfile.RarFile(projectFilePath)
-    rootFolderInRARArchive = rarf.namelist()[0].split("\\")[0]
-    print("")
-    print("{:<30}: {}".format("rarFile", fileName))
-    print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
+    print("{:<30}: {}".format("projectFilePath", projectFilePath))
+    if(rarfile.is_rarfile(projectFilePath)):
+        rarf = rarfile.RarFile(projectFilePath)
+        rootFolderInRARArchive = rarf.namelist()[0].split("\\")[0]
+        print("")
+        print("{:<30}: {}".format("rarFile", fileName))
+        print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
 
-    if "rootFolderInRARArchive" == "rootFolderInRARArchive":  # == repoName
-        # extract
-        print("Extract {} ...".format(projectFilePath))
-        # rarf.extractall(systemPathRepo)
+        if "rootFolderInRARArchive" == "rootFolderInRARArchive":  # == repoName
+            # extract
+            print("Extract {} ...".format(projectFilePath))
+            # rarf.extractall(systemPathRepo)
 
 
 #    destinationPath = systemPathRepo + "\\" + rarf.namelist()[0]
