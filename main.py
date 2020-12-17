@@ -4,6 +4,7 @@ import platform
 import time
 import operator
 from email.utils import formatdate
+from html import escape
 
 from project import Project
 import os
@@ -181,13 +182,16 @@ def isRarRootFolderRepoFolder(project):
         return False
 
 def systemPathExists(systemPath):
-    sysCommand(systemPath + "exists?" + os.path.isdir(systemPath))
+    sysCommand(systemPath + "exists? {}".format(os.path.isdir(systemPath)))
     #return os.path.isdir(os.path.join(basepath, entry))
     return os.path.isdir(systemPath)
 
 def gitRepoExists(systemPath):
     # Option A:
     gitCommand("git status")
+    # TODO: check if repo exists
+    a = False
+    b = False
     if "git status == ....":
         a = True
     else:
@@ -213,10 +217,14 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
     if not gitRepoExists(repoSystemPath):
         gitInitRepo(repoSystemPath)
 
-
     if systemPathExists(extractTargetSystemPath) and gitRepoExists(repoSystemPath):
-
+        print("Starting with workflow of {} projects...".format(len(projectList)))
+        i = 0
         for p in projectList:
+            i=i+1
+            print()
+            print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
+
             ## clean up
             removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
 
@@ -282,8 +290,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
             gitCommand("git add .")
             fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
-            commitTitle = ""
-            commitBody = ""
+            commitTitle = "{}".format(p.fileName)  # TODO escape character
+            commitBody = escape(p.longDescription())    # TODO escape character
             # argument: --date = "Sat Nov 14 14:00 2015 +0100"
             gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
 
@@ -318,8 +326,8 @@ if __name__ == '__main__':
     projects = list()
     files = list()
 
-    systemPath = "D:\\_delete\\SuperMarioWars"
-    #systemPath = "D:\\_delete\\test"
+    #systemPath = "D:\\_delete\\SuperMarioWars"
+    systemPath = "D:\\_delete\\test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
@@ -334,6 +342,7 @@ if __name__ == '__main__':
     # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
 
     systemPathRepo = "D:\\_temp_dev"
+    extractTargetSystemPath = "D:\\_delete\\extract"
 
     printRarDetails = False
 
@@ -464,6 +473,8 @@ if __name__ == '__main__':
     #       git adding
     #       git commiting
     ##
+
+    workflow(projects, extractTargetSystemPath, systemPathRepo)
 
     print("WorkFlow Part ....")
     fileName = files[1]
