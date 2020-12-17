@@ -8,6 +8,7 @@ from html import escape
 
 from project import Project
 import os
+from pathlib import Path
 from unrar import rarfile
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -17,6 +18,7 @@ def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
 
+
 def isDirectoryEntryRelevant(entry):
     if entry[-4:].casefold() == ".rar":
         if len(entry) >= 10:
@@ -24,7 +26,71 @@ def isDirectoryEntryRelevant(entry):
     return False
 
 
+def loadDirectoryList(systemPath):
+    # iterates (recursive) trough all files and folders in systemPath and built projectsList
+    # difference between path.absolut() path.resolve()  https://discuss.python.org/t/pathlib-absolute-vs-resolve/2573
+    #                                                   https://stackoverflow.com/questions/42513056/how-to-get-absolute-path-of-a-pathlib-path-object
+    # print("{:<30} {}".format(systemPath, "... loading ..."))
+    pathEntries = Path(systemPath)
+    print("{:<30} {}".format(str(pathEntries.resolve()), "... loading ..."))
+
+    projectList = list()
+
+    for entry in pathEntries.iterdir():
+        if entry.is_dir():
+            print("{:<30}: {} {}".format(str(pathEntries.resolve()), "directory", entry.name))
+            loadDirectoryList(str(entry.resolve()))
+
+            ''' recursive function
+            ### this part is not needed
+            subPathEntries = Path(str(entry.resolve()))
+            print("test ...")
+            print(subPathEntries)
+            for subPath in subPathEntries.iterdir():
+                #print("{:<30}: {} {}".format(str(pathEntries.resolve()), "directory", entry.name))
+                print("subPath: (should not occure) - " + str(subPath))
+            '''
+
+        if entry.is_file():
+            print("{:<30}: {} {}".format(str(pathEntries.resolve()), "file", entry.name))
+            project = readProjectDetailsFromSystemPath(str(entry.resolve()))
+            projectList.append(project)
+
+    return projectList
+
+
+def readProjectDetailsFromSystemPath(fileSystemPath):
+    filePath = Path(fileSystemPath)
+    # print("read project details from " + str(filePath))
+    # projTimestamp = getTimestampFromFilename(entry)
+    projTimestamp = getTimestampFromFilesystem(str(filePath.resolve()))
+    projName = getProjectNameFromFilename(filePath.name)
+    projInfo = getProjectAdditionalInfoFromFilename(filePath.name)
+    projSystemPath = str(filePath.resolve())
+    currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, filePath.name)
+
+    readRarSpecificDetailsFromSystemPath(currentProject)
+    return currentProject
+
+
+def readRarSpecificDetailsFromSystemPath(project):
+
+    if rarfile.is_rarfile(project.systemFilePath):
+        project.israrfile = True
+        rar = rarfile.RarFile(project.systemFilePath)
+        rootelements = rootElements(rar.namelist())
+        project.setRootElements(rootelements)
+        rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]       # TODO wrong! could exist more than on root Element -> use rootelements instead!
+        project.rarRootFolder = rootFolderInRARArchive
+        #rootFolders.append(rootFolderInRARArchive)
+    else:
+        project.israrfile = False
+
+    return
+
+
 def workWithFilelist(systemPath):
+
     entries = os.listdir(systemPath)
     global files
     files = entries.copy()
@@ -60,15 +126,18 @@ def workWithFilelist(systemPath):
     print("{:<30}: {}".format("numberOfFiles", len(entries)))
     print("{:<30}: {}".format("numberOfProjects", len(projects)))
 
+
 def showFiles():
     for e in files:
         print(e)
+
 
 def showProjects():
     for p in projects:
         print()
         p.say_state()
         print()
+
 
 def getTimestampFromFilename(fileName):
     # split string with " ", 1 time => list with 2 itmes
@@ -90,6 +159,7 @@ def getTimestampFromFilename(fileName):
             return data[1][0:10]
     return "0000.00.00"
 
+
 def modified_date(path_to_file):
     """
     Try to get the date that a file was created, falling back to when it was
@@ -106,6 +176,7 @@ def modified_date(path_to_file):
             # We're probably on Linux. No easy way to get creation dates here,
             # so we'll settle for when its content was last modified.
             return stat.st_mtime
+
 
 def creation_date(path_to_file):
     """
@@ -124,14 +195,17 @@ def creation_date(path_to_file):
             # so we'll settle for when its content was last modified.
             return stat.st_mtime
 
+
 def getTimestampFromFilesystem(fileName):
     return modified_date(fileName)
     #return creation_date(fileName)
+
 
 def getProjectNameFromFilename(fileName):
     # split string with " ", 1 time => list with 2 itmes
     data = fileName.split(" ", 1)
     return data[0]
+
 
 def getProjectAdditionalInfoFromFilename(fileName):
     # split string with " ", 1 time => list with 2 itmes
@@ -140,6 +214,7 @@ def getProjectAdditionalInfoFromFilename(fileName):
         return data[1][10:]
     return ""
 
+
 def printProjects(list):
     for p in list:
         timestamp = p.timestamp
@@ -147,17 +222,21 @@ def printProjects(list):
         rfc2822 = formatdate(timestamp, True)
         print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
+
 def gitInitRepo():
     gitCommand("git init")
     sysCommand("copy .gitignore")
     gitCommand("git add - a")
     gitCommand("git commit")
 
+
 def gitCommand(cmd):
     print(cmd)
 
+
 def sysCommand(cmd):
     print(cmd)
+
 
 def removeAllProjectFilesFromRepo(repoSystemPath):
     # keep
@@ -165,8 +244,10 @@ def removeAllProjectFilesFromRepo(repoSystemPath):
     #.gitignore
     sysCommand("rm {} -r -e:.git .gitignore".format(repoSystemPath))
 
+
 def compare_intersect(x, y):
     return frozenset(x).intersection(y)
+
 
 def isRarRootFolderRepoFolder(project):
     # if RootElement is on of the string in valid array, it is the repo Folder and we need to cd "change direction" on path deeper
@@ -181,10 +262,12 @@ def isRarRootFolderRepoFolder(project):
     else:
         return False
 
+
 def systemPathExists(systemPath):
     sysCommand(systemPath + "exists? {}".format(os.path.isdir(systemPath)))
     #return os.path.isdir(os.path.join(basepath, entry))
     return os.path.isdir(systemPath)
+
 
 def gitRepoExists(systemPath):
     # Option A:
@@ -202,10 +285,12 @@ def gitRepoExists(systemPath):
 
     return a
 
+
 def extractProject(proj, extractTargetSystemPath):
     #rarf = rarfile.RarFile(projectFilePath)
     #rarf.extractall(systemPathRepo)
     sysCommand("rarf.extractall({})".format(extractTargetSystemPath))
+
 
 def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
@@ -290,13 +375,14 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
             gitCommand("git add .")
             fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
-            commitTitle = "{}".format(p.fileName)  # TODO escape character
-            commitBody = escape(p.longDescription())    # TODO escape character
+            commitTitle = "{}".format(p.fileName)  # TODO escape character, convert LF and RETURN to html code?
+            commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
             # argument: --date = "Sat Nov 14 14:00 2015 +0100"
             gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
 
 
 def rootElements(list):
+    # analyze the rarfile.filenames() list to find all root elements
     rootelements = set()
     for item in list:
         rootelements.add(item.split("\\")[0])
@@ -335,6 +421,9 @@ if __name__ == '__main__':
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\SuperMarioWars 2014.08.06 PhotonUnityNetwork - Authorative Movement - Movement with Networked Rigidbody2D"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\SuperMarioWars 2014.08.19 PhotonUnityNetwork - Authorative Movement - Movement without Unity Physics - New InputScript"
 
+    prokectsnew = loadDirectoryList(systemPath)
+    printProjects(prokectsnew)
+    exit()
     workWithFilelist(systemPath)
 
     # showFiles()
