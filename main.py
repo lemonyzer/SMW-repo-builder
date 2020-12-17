@@ -164,11 +164,18 @@ def removeAllProjectFilesFromRepo(repoSystemPath):
     #.gitignore
     sysCommand("rm {} -r -e:.git .gitignore".format(repoSystemPath))
 
-def isRarRootFolderRepoFolder(project):
+def compare_intersect(x, y):
+    return frozenset(x).intersection(y)
 
+def isRarRootFolderRepoFolder(project):
+    # if RootElement is on of the string in valid array, it is the repo Folder and we need to cd "change direction" on path deeper
     valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
 
-    if project.rarRootFolder in valid:
+    # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
+    intersectResult = compare_intersect(project.getRootElements(), valid)
+
+    print(intersectResult)
+    if len(intersectResult) >= 1:
         return True
     else:
         return False
@@ -197,6 +204,8 @@ def extractProject(proj, extractTargetSystemPath):
     sysCommand("rarf.extractall({})".format(extractTargetSystemPath))
 
 def workflow(projectList, extractTargetSystemPath, repoSystemPath):
+
+    # https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
 
     if not systemPathExists(extractTargetSystemPath):
         sysCommand("create dir " + extractTargetSystemPath)
@@ -263,10 +272,20 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             # rarRootFolder\* -> repo\*
             # move all files inside rootFolder to repoFolder
 
+            sysCommand("cd to extracted project folder")
+
             if isRarRootFolderRepoFolder(p):
-                sysCommand("cd to extracted project folder")
+                sysCommand("cd to extracted project folder sub directory")
+                sysCommand("move all files in cd .\\* to repo folder")
+            else:
+                sysCommand("move all files in cd .\\* to repo folder")
 
-
+            gitCommand("git add .")
+            fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+            commitTitle = ""
+            commitBody = ""
+            # argument: --date = "Sat Nov 14 14:00 2015 +0100"
+            gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
 
 
 def rootElements(list):
