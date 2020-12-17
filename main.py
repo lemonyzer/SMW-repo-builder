@@ -299,8 +299,8 @@ if __name__ == '__main__':
     projects = list()
     files = list()
 
-    #systemPath = "D:\\_delete\\SuperMarioWars"
-    systemPath = "D:\\_delete\\test"
+    systemPath = "D:\\_delete\\SuperMarioWars"
+    #systemPath = "D:\\_delete\\test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
@@ -403,9 +403,16 @@ if __name__ == '__main__':
         for item in set(rootFolders):
             print("\t{}".format(item))  # hide duplicates from list
 
-        print("{:<130} {:<30} {}".format("file", "root folder", "amount of root Elements"))
+        print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in projectsSorted:
-            print("{:<130} {:<30} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))
+            if len(p.rootElements) == 1:
+                print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))
+            elif len(p.rootElements) > 1:
+                print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.rootElements)))
+                for e in p.getRootElements():
+                    print("{:<130} {:<55}".format("|---------------------------------------------------------------->", e))
+            else:
+                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
 
     ## compare timestamps
     print()
