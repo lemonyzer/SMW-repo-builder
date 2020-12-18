@@ -8,8 +8,9 @@ from html import escape
 
 from project import Project
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 from unrar import rarfile
+import shutil
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -240,9 +241,34 @@ def sysCommand(cmd):
 
 def removeAllProjectFilesFromRepo(repoSystemPath):
     # keep
-    #.git/
+    #.git
     #.gitignore
     sysCommand("rm {} -r -e:.git .gitignore".format(repoSystemPath))
+
+    exclusions = [".git", ".gitignore"]
+    print(f'exclusions: {exclusions}')
+    removeRecursive(repoSystemPath, exclusions)
+
+
+def removeRecursive(repoSystemPath, exclusions):
+
+    repo = Path(repoSystemPath)
+    for entry in repo.iterdir():
+
+        if entry.name in exclusions:
+            # exclusion found, don't delete entry
+            print(f'exclusions found {entry.name}')
+            continue
+        else:
+            if entry.is_dir():
+                # is_Directory
+                removeRecursive(str(entry.resolve()), exclusions)
+                # print(f'{entry.name}.rmdir()')
+                entry.rmdir()                                       # remove (empty) directory
+            else:
+                # is_File
+                # print(f'{entry.name}.unlink(missing_ok=True)')
+                entry.unlink(missing_ok=True)                       # remove file
 
 
 def compare_intersect(x, y):
@@ -287,22 +313,147 @@ def gitRepoExists(systemPath):
 
 
 def extractProject(proj, extractTargetSystemPath):
-    #rarf = rarfile.RarFile(projectFilePath)
-    #rarf.extractall(systemPathRepo)
-    sysCommand("rarf.extractall({})".format(extractTargetSystemPath))
+    # extract rar-file to targetDir\rar-file-name\
+    projectExtractPath = extractTargetSystemPath + "\\" + proj.fileName
+    projectExtractPath = projectExtractPath[:-4]
+    proj.extractPath = projectExtractPath
+    rarf = rarfile.RarFile(proj.systemFilePath)
+    filteredMembers = filterUnescessaryFilesFromRar(proj, rarf)
+    print("filteredMembers {} / {}".format(len(filteredMembers), len(rarf.namelist())))
+    rarf.extractall(projectExtractPath, members=filteredMembers)
+    sysCommand("extract {} ------> .... rarf.extractall .... {})".format(proj.systemFilePath, extractTargetSystemPath))
+
+
+def maxLevel(checkLevel, arrayLength):
+    if checkLevel == 0:
+        return 0
+    else:
+        # can't filter checkLevel 1 (1 Level subdir) if array has only one element
+        if arrayLength > 1:
+            return 1
+        else:
+            return 0
+
+
+def filterUnescessaryFilesFromRar(proj, rarFile):
+    exclusions = ["Library", "Temp", "Obj", "Build", "Builds", "Logs", "User Settings", ".vs", ".gradle"]
+    debug = False
+    #for m in rarFile.namelist():
+    #    print(f'{m}')
+
+    checkLevel = 0
+
+    if len(proj.getRootElements()) == 1:
+        # single root element
+        if "Assets" in proj.getRootElements():
+            print("Assets is rootElement, no filtering explusions!!!")
+            return rarFile.namelist()
+        else:
+            # other rootElement (propably <UnityProjectName>)
+            checkLevel = 1
+            pass
+    elif len(proj.getRootElements()) > 1:
+        # multiple root elements
+        if "Assets" in proj.getRootElements():
+            # Assets in rootElements found, filtering only in level 0
+            checkLevel = 0
+        else:
+            # Assets NOT in rootElements found, filtering in level 1
+            checkLevel = 1
+
+    filteredmembers = list()
+    excludedmembers = list()
+    for member in rarFile.namelist():
+        array = member.split("\\")
+
+        basepathOfMember = member.split("\\")[maxLevel(checkLevel, len(array))]  # TODO fix/verify: Option 1 basedir extract with current filter, Option B second baseDir extract without filter. totalcommander to compare both base dir and delete similar files. check diff
+        # print(basepathOfMember)
+        if basepathOfMember in exclusions:
+            if debug:
+                print(f'excluded member: {member}')
+            excludedmembers.append(member)
+        else:
+            filteredmembers.append(member)
+
+    # for i in excludedmembers:
+    #     print(f'excluded: {i}')
+
+    return filteredmembers
+
+
+def findProjectRepoLevel(projectExtractedPath):
+    # TODO find repoLevel in extracted project structure
+
+    print("findProjectRepoLevel in " + str(projectExtractedPath.resolve()))
+    # print(f'{projectExtractedPath.name} - child elements: {len(projectExtractedPath.iterdir())}')
+    directoryList = os.listdir(projectExtractedPath.resolve())
+
+    # if RootElement is on of the string in valid array, we are in the repo Folder
+    baseIsFirstLevel = ["Assets"]
+
+    # if RootElement is on of the string in baseIsSecondLevel array, it is the repo Folder and we need to cd "change direction" on path deeper
+    baseIsSecondLevel = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean", "Changes SuperMarioWars 2015.04.07_5 to 2015.04.10_3"]
+
+    # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
+    intersectResult = compare_intersect(directoryList, baseIsFirstLevel)
+
+    print(intersectResult)
+    if len(intersectResult) >= 1:
+        return projectExtractedPath
+    else:
+
+        intersectResult = compare_intersect(directoryList, baseIsSecondLevel)
+        print(intersectResult)
+        if len(intersectResult) >= 1:
+            for entry in projectExtractedPath.iterdir():
+                # print(str(entry.name))
+                if entry.name in intersectResult:
+                    return entry
+
+                #                                            # TODO double checking .... i'm to tired.
+                #                                            # TODO list compares with list (intersection) schnittmenge
+                #                                            # TODO if atleast one element intersects... go to folder that matches first # THIS IS NOT SOLID!
+                # if entry in baseIsSecondLevel:
+                #    return entry
+            print("no matching found! " + str(intersectResult))
+        else:
+            return projectExtractedPath
+
+    return projectExtractedPath
+    # for entry in projectExtractedPath.iterdir():
+    #
+    #     if(entry.is_dir())
+    #         findProjectRepoLevel(entry)
+    #
+    #     if
+    #     pass
 
 
 def workflow(projectList, extractTargetSystemPath, repoSystemPath):
-
+    # TODO implement extract and git workflow
     # https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
 
-    if not systemPathExists(extractTargetSystemPath):
-        sysCommand("create dir " + extractTargetSystemPath)
+    extractTargetRoot = Path(extractTargetSystemPath)
+    # check if folder exists, if not try to create it
+    if not extractTargetRoot.exists():
+        try:
+            extractTargetRoot.mkdir(parents=True)
+        except FileExistsError as exc:
+            print(exc)
+            exit
 
-    if not gitRepoExists(repoSystemPath):
-        gitInitRepo(repoSystemPath)
+    # check if folder is folder, if not exit
+    if not extractTargetRoot.is_dir():
+        print("ERROR: {:<50} ... is not a folder and exists".format(str(extractTargetRoot.resolve())))
+        exit
+    else:
+        print("{:<50} ... is folder and exists".format(str(extractTargetRoot.resolve())))
 
-    if systemPathExists(extractTargetSystemPath) and gitRepoExists(repoSystemPath):
+    if not gitRepoExists(repoSystemPath):       # TODO gitRepoExists
+        gitInitRepo(repoSystemPath)             # TODO gitInitRepo
+
+    if systemPathExists(extractTargetSystemPath) and gitRepoExists(repoSystemPath):     # TODO
+        print()
         print("Starting with workflow of {} projects...".format(len(projectList)))
         i = 0
         for p in projectList:
@@ -367,18 +518,48 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
             sysCommand("cd to extracted project folder")
 
-            if isRarRootFolderRepoFolder(p):
-                sysCommand("cd to extracted project folder sub directory")
-                sysCommand("move all files in cd .\\* to repo folder")
-            else:
-                sysCommand("move all files in cd .\\* to repo folder")
+            # TODO join extractTargetRoot.resolve() with p.fileName to reach extractedPath
+            # print(extractTargetSystemPath)
+            # if extractTargetRoot.exists():
+            #       print(extractTargetRoot.resolve())
+            #       print(str(extractTargetRoot))
 
-            gitCommand("git add .")
-            fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
-            commitTitle = "{}".format(p.fileName)  # TODO escape character, convert LF and RETURN to html code?
-            commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
-            # argument: --date = "Sat Nov 14 14:00 2015 +0100"
-            gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
+            # extractedProjectSystemPath = str(extractTargetRoot)+"\\"+p.fileName
+            # extractedProjectSystemPath = extractedProjectSystemPath[:-4]   # remove .rar
+            # print(extractedProjectSystemPath)
+
+            projectExtractedPath = Path(p.extractPath)
+            print(f'{str(projectExtractedPath)} exists? {projectExtractedPath.exists()}')
+
+            if projectExtractedPath.exists():
+                # analyseExtractedPath(projectExtractedPath)
+                # find root of repo
+                # sub-level for repo
+                projectExtractedPathRepoLevel = findProjectRepoLevel(projectExtractedPath)
+                p.extractPathRepoBase = projectExtractedPathRepoLevel
+                print("--- {:<50} : is repo base dir".format(str(projectExtractedPathRepoLevel)))
+
+
+                # if isRarRootFolderRepoFolder(p):
+                #     sysCommand("cd to extracted project folder sub directory")
+                #     sysCommand("move all files in cd .\\* to repo folder")
+                # else:
+                #     sysCommand("move all files in cd .\\* to repo folder")
+
+                # TODO move files to repo
+
+                # Problem: moves complete directory!
+                # shutil.move(str(p.extractPathRepoBase.resolve()), repoSystemPath)
+                # Fix:
+                for entry in p.extractPathRepoBase.iterdir():
+                    shutil.move(str(entry.resolve()), repoSystemPath)
+
+                gitCommand("git add .")
+                fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+                commitTitle = "{}".format(p.fileName)  # TODO escape character, convert LF and RETURN to html code?
+                commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
+                # argument: --date = "Sat Nov 14 14:00 2015 +0100"
+                gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
 
 
 def rootElements(list):
@@ -413,7 +594,7 @@ if __name__ == '__main__':
     files = list()
 
     #systemPath = "D:\\_delete\\SuperMarioWars"
-    systemPath = "D:\\_delete\\test"
+    systemPath = "D:\_temp_test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
@@ -423,7 +604,7 @@ if __name__ == '__main__':
 
     prokectsnew = loadDirectoryList(systemPath)
     printProjects(prokectsnew)
-    exit()
+
     workWithFilelist(systemPath)
 
     # showFiles()
@@ -565,35 +746,6 @@ if __name__ == '__main__':
 
     workflow(projects, extractTargetSystemPath, systemPathRepo)
 
-    print("WorkFlow Part ....")
-    fileName = files[1]
-    print("{:<30}: {}".format("fileName", fileName))
-    projectFilePath = systemPath + "\\" + fileName
-    print("{:<30}: {}".format("projectFilePath", projectFilePath))
-    if(rarfile.is_rarfile(projectFilePath)):
-        rarf = rarfile.RarFile(projectFilePath)
-        rootFolderInRARArchive = rarf.namelist()[0].split("\\")[0]
-        print("")
-        print("{:<30}: {}".format("rarFile", fileName))
-        print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
-
-        if "rootFolderInRARArchive" == "rootFolderInRARArchive":  # == repoName
-            # extract
-            print("Extract {} ...".format(projectFilePath))
-            # rarf.extractall(systemPathRepo)
-
-
-#    destinationPath = systemPathRepo + "\\" + rarf.namelist()[0]
-    #print(destinationPath)
-    #print(rarf.infolist()[0])
-    #print(rarf.printdir())
-
-    #rarf.extractall()
-
-    # print(rarf.namelist())
-    # print(rarf.getinfo("SuperMarioWars\\Assets").date_time)
-    # print(projects[1].timestamp)
-
-
-
+    for p in projects:
+        print(str(p.extractPathRepoBase))
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

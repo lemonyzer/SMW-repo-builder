@@ -12,6 +12,8 @@ class Project:
         self.israrfile = False
         self.rarRootFolder = ""
         self.rootElements = set()
+        self.extractPath = ""
+        self.extractPathRepoBase = ""
 
     def setRootElements(self, newSet):
         self.rootElements = newSet
