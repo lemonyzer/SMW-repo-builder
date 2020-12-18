@@ -11,6 +11,9 @@ import os
 from pathlib import Path, PurePath
 from unrar import rarfile
 import shutil
+from git import Repo, NoSuchPathError, InvalidGitRepositoryError
+
+
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -221,14 +224,23 @@ def printProjects(list):
         timestamp = p.timestamp
         local_time = time.ctime(timestamp)
         rfc2822 = formatdate(timestamp, True)
+        p.rfc2822 = rfc2822
         print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
 
 
-def gitInitRepo():
+def gitInitRepo(repoSystemPath):
+    repo = Repo.init(repoSystemPath)
+
     gitCommand("git init")
-    sysCommand("copy .gitignore")
+    sysCommand("copy .gitignore")   #  TODO .gitignore
+    src = os.getcwd() + "\\Unity.gitignore"
+    dst = repoSystemPath + "\\.gitignore"
+    shutil.copy(src, dst)
+
     gitCommand("git add - a")
     gitCommand("git commit")
+
+    return repo
 
 
 def gitCommand(cmd):
@@ -296,8 +308,12 @@ def systemPathExists(systemPath):
 
 
 def gitRepoExists(systemPath):
+
+    repo = Repo(systemPath)
+
     # Option A:
     gitCommand("git status")
+
     # TODO: check if repo exists
     a = False
     b = False
@@ -433,6 +449,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
     # TODO implement extract and git workflow
     # https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
 
+
+
     extractTargetRoot = Path(extractTargetSystemPath)
     # check if folder exists, if not try to create it
     if not extractTargetRoot.exists():
@@ -440,19 +458,45 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             extractTargetRoot.mkdir(parents=True)
         except FileExistsError as exc:
             print(exc)
-            exit
+            exit()
 
     # check if folder is folder, if not exit
     if not extractTargetRoot.is_dir():
         print("ERROR: {:<50} ... is not a folder and exists".format(str(extractTargetRoot.resolve())))
-        exit
+        exit()
     else:
         print("{:<50} ... is folder and exists".format(str(extractTargetRoot.resolve())))
 
-    if not gitRepoExists(repoSystemPath):       # TODO gitRepoExists
+    repo = any
+    repoExisted = False
+
+    try:
+        repo = Repo(repoSystemPath)
+        repoExisted = True
+    except NoSuchPathError as exc:
+        print(exc)
+    except InvalidGitRepositoryError as exc:
+        print(exc)
+
+    repoPath = Path(repoSystemPath)
+    if not repoPath.exists():
+        repoExisted = False
+        repoPath.mkdir(parents=True)
+
+    if not repoExisted:                         # TODO gitRepoExists
+        print("repo didn't exists, create folder and init repo ...")
         gitInitRepo(repoSystemPath)             # TODO gitInitRepo
 
-    if systemPathExists(extractTargetSystemPath) and gitRepoExists(repoSystemPath):     # TODO
+    if not Path(repoSystemPath + "\\.gitignore").exists():
+        x = ""
+        while x not in ["yes", "YES", "N", "n", "No"]:
+            x = input("no .gitingore file found, continue? [yes/No]")
+            if x in ["N", "n", "No"]:
+                exit()
+            elif x in ["yes", "YES"]:
+                break
+
+    if extractTargetRoot.exists() and extractTargetRoot.is_dir():
         print()
         print("Starting with workflow of {} projects...".format(len(projectList)))
         i = 0
@@ -554,13 +598,24 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 for entry in p.extractPathRepoBase.iterdir():
                     shutil.move(str(entry.resolve()), repoSystemPath)
 
+
                 gitCommand("git add .")
-                fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+                repo.git.add(A=True)        # same as git add .
+                gitcmds.append("repo.git.add(A=True)")
+
+                #fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+                fileSystemTimestamp = p.rfc2822
+
                 commitTitle = "{}".format(p.fileName)  # TODO escape character, convert LF and RETURN to html code?
                 commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
                 gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
-
+                print("fileSystemTimestamp = " + fileSystemTimestamp)
+                print('-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
+                parts = ['-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
+                gitcmds.append("repo.git.commit " + " ".join(parts))
+                repo.git.commit('-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
+                time.sleep(5)
 
 def rootElements(list):
     # analyze the rarfile.filenames() list to find all root elements
@@ -668,7 +723,7 @@ if __name__ == '__main__':
 
     #testProjectList = list()
 
-    showProjects = False
+    showProjects = True
 
     if showProjects:
         print("projects")
@@ -744,7 +799,11 @@ if __name__ == '__main__':
     #       git commiting
     ##
 
+    gitcmds = list()
     workflow(projects, extractTargetSystemPath, systemPathRepo)
+
+    for i in gitcmds:
+        print(i)
 
     for p in projects:
         print(str(p.extractPathRepoBase))

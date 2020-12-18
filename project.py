@@ -14,6 +14,7 @@ class Project:
         self.rootElements = set()
         self.extractPath = ""
         self.extractPathRepoBase = ""
+        self.rfc2822 = ""
 
     def setRootElements(self, newSet):
         self.rootElements = newSet
