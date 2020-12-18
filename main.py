@@ -36,14 +36,14 @@ def loadDirectoryList(systemPath):
     #                                                   https://stackoverflow.com/questions/42513056/how-to-get-absolute-path-of-a-pathlib-path-object
     # print("{:<30} {}".format(systemPath, "... loading ..."))
     pathEntries = Path(systemPath)
-    print("{:<30} {}".format(str(pathEntries.resolve()), "... loading ..."))
+    print("{:<30} {}".format(str(pathEntries), "... loading ..."))
 
     projectList = list()
 
     for entry in pathEntries.iterdir():
         if entry.is_dir():
-            print("{:<30}: {} {}".format(str(pathEntries.resolve()), "directory", entry.name))
-            loadDirectoryList(str(entry.resolve()))
+            print("{:<30}: {} {}".format(str(pathEntries), "directory", entry.name))
+            loadDirectoryList(str(entry))
 
             ''' recursive function
             ### this part is not needed
@@ -56,8 +56,8 @@ def loadDirectoryList(systemPath):
             '''
 
         if entry.is_file():
-            print("{:<30}: {} {}".format(str(pathEntries.resolve()), "file", entry.name))
-            project = readProjectDetailsFromSystemPath(str(entry.resolve()))
+            print("{:<30}: {} {}".format(str(pathEntries), "file", entry.name))
+            project = readProjectDetailsFromSystemPath(str(entry))
             projectList.append(project)
 
     return projectList
@@ -67,10 +67,10 @@ def readProjectDetailsFromSystemPath(fileSystemPath):
     filePath = Path(fileSystemPath)
     # print("read project details from " + str(filePath))
     # projTimestamp = getTimestampFromFilename(entry)
-    projTimestamp = getTimestampFromFilesystem(str(filePath.resolve()))
+    projTimestamp = getTimestampFromFilesystem(str(filePath))
     projName = getProjectNameFromFilename(filePath.name)
     projInfo = getProjectAdditionalInfoFromFilename(filePath.name)
-    projSystemPath = str(filePath.resolve())
+    projSystemPath = str(filePath)
     currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, filePath.name)
 
     readRarSpecificDetailsFromSystemPath(currentProject)
@@ -274,7 +274,7 @@ def removeRecursive(repoSystemPath, exclusions):
         else:
             if entry.is_dir():
                 # is_Directory
-                removeRecursive(str(entry.resolve()), exclusions)
+                removeRecursive(str(entry), exclusions)
                 # print(f'{entry.name}.rmdir()')
                 entry.rmdir()                                       # remove (empty) directory
             else:
@@ -332,6 +332,7 @@ def extractProject(proj, extractTargetSystemPath):
     # extract rar-file to targetDir\rar-file-name\
     projectExtractPath = extractTargetSystemPath + "\\" + proj.fileName
     projectExtractPath = projectExtractPath[:-4]
+    projectExtractPath = projectExtractPath.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
     proj.extractPath = projectExtractPath
     rarf = rarfile.RarFile(proj.systemFilePath)
     filteredMembers = filterUnescessaryFilesFromRar(proj, rarf)
@@ -399,10 +400,12 @@ def filterUnescessaryFilesFromRar(proj, rarFile):
 
 def findProjectRepoLevel(projectExtractedPath):
     # TODO find repoLevel in extracted project structure
-
-    print("findProjectRepoLevel in " + str(projectExtractedPath.resolve()))
+    projectExtractedPath = Path(projectExtractedPath)
+    print("findProjectRepoLevel in " + str(projectExtractedPath))
+    #print("findProjectRepoLevel in " + str(projectExtractedPath.resolve()))
     # print(f'{projectExtractedPath.name} - child elements: {len(projectExtractedPath.iterdir())}')
-    directoryList = os.listdir(projectExtractedPath.resolve())
+    #directoryList = os.listdir(projectExtractedPath.resolve())
+    directoryList = os.listdir(projectExtractedPath)
 
     # if RootElement is on of the string in valid array, we are in the repo Folder
     baseIsFirstLevel = ["Assets"]
@@ -445,11 +448,19 @@ def findProjectRepoLevel(projectExtractedPath):
     #     pass
 
 
+def waitForInput(message):
+    x = ""
+    while x not in ["yes", "YES", "N", "n", "No"]:
+        x = input(message)
+        if x in ["N", "n", "No"]:
+            exit()
+        elif x in ["yes", "YES"]:
+            break
+
+
 def workflow(projectList, extractTargetSystemPath, repoSystemPath):
     # TODO implement extract and git workflow
     # https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
-
-
 
     extractTargetRoot = Path(extractTargetSystemPath)
     # check if folder exists, if not try to create it
@@ -465,7 +476,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
         print("ERROR: {:<50} ... is not a folder and exists".format(str(extractTargetRoot.resolve())))
         exit()
     else:
-        print("{:<50} ... is folder and exists".format(str(extractTargetRoot.resolve())))
+        #print("{:<50} ... is folder and exists".format(str(extractTargetRoot.resolve())))
+        print("{:<50} ... is folder and exists".format(str(extractTargetRoot)))
 
     repo = any
     repoExisted = False
@@ -485,26 +497,22 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
     if not repoExisted:                         # TODO gitRepoExists
         print("repo didn't exists, create folder and init repo ...")
-        gitInitRepo(repoSystemPath)             # TODO gitInitRepo
+        repo = gitInitRepo(repoSystemPath)             # TODO gitInitRepo
 
     if not Path(repoSystemPath + "\\.gitignore").exists():
-        x = ""
-        while x not in ["yes", "YES", "N", "n", "No"]:
-            x = input("no .gitingore file found, continue? [yes/No]")
-            if x in ["N", "n", "No"]:
-                exit()
-            elif x in ["yes", "YES"]:
-                break
+        message = "no .gitingore file found, continue? [yes/No]"
+        waitForInput(message)
 
     if extractTargetRoot.exists() and extractTargetRoot.is_dir():
         print()
         print("Starting with workflow of {} projects...".format(len(projectList)))
         i = 0
         for p in projectList:
+
             i=i+1
             print()
             print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
-
+            ## waitForInput("continue?")
             ## clean up
             removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
 
@@ -596,7 +604,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 # shutil.move(str(p.extractPathRepoBase.resolve()), repoSystemPath)
                 # Fix:
                 for entry in p.extractPathRepoBase.iterdir():
-                    shutil.move(str(entry.resolve()), repoSystemPath)
+                    # print("move " + str(entry))
+                    shutil.move(str(entry), repoSystemPath)
 
 
                 gitCommand("git add .")
@@ -611,11 +620,11 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
                 gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
                 print("fileSystemTimestamp = " + fileSystemTimestamp)
-                print('-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
-                parts = ['-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
+                print('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
+                parts = ['--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
                 gitcmds.append("repo.git.commit " + " ".join(parts))
-                repo.git.commit('-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
-                time.sleep(5)
+                repo.git.commit('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)  # FIX --allow-empty (if rar files don't contain changes!)
+                time.sleep(2)
 
 def rootElements(list):
     # analyze the rarfile.filenames() list to find all root elements
@@ -649,7 +658,8 @@ if __name__ == '__main__':
     files = list()
 
     #systemPath = "D:\\_delete\\SuperMarioWars"
-    systemPath = "D:\_temp_test"
+    systemPath = "J:\\src\\SuperMarioWars"
+    #systemPath = "D:\_temp_test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
@@ -666,8 +676,8 @@ if __name__ == '__main__':
     # showProjects()
     # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
 
-    systemPathRepo = "D:\\_temp_dev"
-    extractTargetSystemPath = "D:\\_delete\\extract"
+    systemPathRepo = "J:\\repoTest"
+    extractTargetSystemPath = "J:\\extractTest"
 
     printRarDetails = False
 
@@ -747,7 +757,7 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
-
+    waitForInput("check sorted list")
 
     showRARArchiveRootFolder = True
     if showRARArchiveRootFolder:
@@ -769,7 +779,7 @@ if __name__ == '__main__':
 
     ## compare timestamps
     print()
-    print("{:<12} {:<3} {:<12} {}".format("fileName", " ", "fileSystem", "p.fileName"))
+    print("{:<15} {:<3} {:<15} {}".format("fileName", " ", "fileSystem\\|/", "p.fileName"))
     for p in projectsSorted:
         fileNameTimestamp = getTimestampFromFilename(p.fileName)
         # 2015.04.18
@@ -789,7 +799,9 @@ if __name__ == '__main__':
             compareresult = "==="
         else:
             compareresult = "!!!"
-        print("{:<12} {} {:<12} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
+        print("{:<15} {} {:<15} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
+
+    waitForInput("check timestamps")
 
     ##
     ##  Workflow
@@ -799,8 +811,9 @@ if __name__ == '__main__':
     #       git commiting
     ##
 
+    waitForInput("start workflow?")
     gitcmds = list()
-    workflow(projects, extractTargetSystemPath, systemPathRepo)
+    workflow(projectsSorted, extractTargetSystemPath, systemPathRepo)     #  FIX project order
 
     for i in gitcmds:
         print(i)
