@@ -500,7 +500,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
         repo = gitInitRepo(repoSystemPath)             # TODO gitInitRepo
 
     if not Path(repoSystemPath + "\\.gitignore").exists():
-        message = "no .gitingore file found, continue? [yes/No]"
+        message = "no .gitingore file found, continue? [yes/No]:"
         waitForInput(message)
 
     if extractTargetRoot.exists() and extractTargetRoot.is_dir():
@@ -512,7 +512,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             i=i+1
             print()
             print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
-            ## waitForInput("continue?")
+            ## waitForInput("continue? [yes/No]:")
             ## clean up
             removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
 
@@ -624,7 +624,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 parts = ['--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
                 gitcmds.append("repo.git.commit " + " ".join(parts))
                 repo.git.commit('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)  # FIX --allow-empty (if rar files don't contain changes!)
-                time.sleep(2)
+                time.sleep(0.2)
+        removeAllProjectFilesFromRepo(repoSystemPath)  # delete last project extracted files
 
 def rootElements(list):
     # analyze the rarfile.filenames() list to find all root elements
@@ -658,7 +659,8 @@ if __name__ == '__main__':
     files = list()
 
     #systemPath = "D:\\_delete\\SuperMarioWars"
-    systemPath = "J:\\src\\SuperMarioWars"
+    #systemPath = "J:\\src\\SuperMarioWars"
+    systemPath = "R:\\SuperMarioWars"
     #systemPath = "D:\_temp_test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
@@ -676,8 +678,8 @@ if __name__ == '__main__':
     # showProjects()
     # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
 
-    systemPathRepo = "J:\\repoTest"
-    extractTargetSystemPath = "J:\\extractTest"
+    systemPathRepo = "R:\\repoTest"
+    extractTargetSystemPath = "R:\\extractTest"
 
     printRarDetails = False
 
@@ -757,7 +759,7 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
-    waitForInput("check sorted list")
+    waitForInput("check sorted list [yes,no]:")
 
     showRARArchiveRootFolder = True
     if showRARArchiveRootFolder:
@@ -801,7 +803,7 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<15} {} {:<15} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
 
-    waitForInput("check timestamps")
+    waitForInput("check timestamps [yes,no]:")
 
     ##
     ##  Workflow
@@ -811,13 +813,13 @@ if __name__ == '__main__':
     #       git commiting
     ##
 
-    waitForInput("start workflow?")
+    waitForInput("start workflow? [yes,no]:")
     gitcmds = list()
     workflow(projectsSorted, extractTargetSystemPath, systemPathRepo)     #  FIX project order
 
     for i in gitcmds:
         print(i)
 
-    for p in projects:
+    for p in projectsSorted:
         print(str(p.extractPathRepoBase))
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
