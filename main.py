@@ -13,6 +13,8 @@ from unrar import rarfile
 import shutil
 from git import Repo, NoSuchPathError, InvalidGitRepositoryError
 
+import json
+from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip install pathvalidate
 
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -632,6 +634,14 @@ def rootElements(list):
     return rootelements
 
 
+def loadDatabase():
+    return 0
+
+def saveDatabase(data, filename):
+    fullfilename = sanitize_filename(filename) + ".json"
+    with open(fullfilename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
@@ -756,6 +766,8 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
+    saveDatabase(projects, "projects")
+    saveDatabase(projectsSorted, "projectsSorted")
     waitForInput("check sorted list [yes,no]:")
 
     showRARArchiveRootFolder = True
