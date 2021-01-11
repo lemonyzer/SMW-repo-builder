@@ -307,25 +307,22 @@ def systemPathExists(systemPath):
     return os.path.isdir(systemPath)
 
 
-def gitRepoExists(systemPath):
+def gitRepoExists(repoSystemPath):
+    # Option B return repo ... return null if not exists
+    # repo = any
+    repoExists = False
 
-    repo = Repo(systemPath)
+    try:
+        # Option B
+        # repo = Repo(repoSystemPath)
+        Repo(repoSystemPath)
+        repoExists = True
+    except NoSuchPathError as exc:
+        print(exc)
+    except InvalidGitRepositoryError as exc:
+        print(exc)
 
-    # Option A:
-    gitCommand("git status")
-
-    # TODO: check if repo exists
-    a = False
-    b = False
-    if "git status == ....":
-        a = True
-    else:
-        a = False
-
-    # Option B:
-    b = systemPathExists(systemPath + "\\.git")
-
-    return a
+    return repoExists
 
 
 def extractProject(proj, extractTargetSystemPath):
@@ -660,7 +657,7 @@ if __name__ == '__main__':
 
     #systemPath = "D:\\_delete\\SuperMarioWars"
     #systemPath = "J:\\src\\SuperMarioWars"
-    systemPath = "R:\\SuperMarioWars"
+    systemPath = "R:\\SMW-Test"
     #systemPath = "D:\_temp_test"
 #    systemPath = "D:\\_temp"
 #    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
