@@ -640,8 +640,13 @@ def loadDatabase():
     return 0
 
 def saveDatabase(data, filename):
-    print("Printing to check how it will look like")
-    print(ProjectEncoder().encode(data))
+    #print("Printing to check how it will look like")
+    #print(ProjectEncoder().encode(data))
+
+    print("Encode Project Objects into JSON formatted Data using custom JSONEncoder")
+    dataJSONData = json.dumps(data, indent=4, cls=ProjectEncoder)
+    print(dataJSONData)
+    
     #fullfilename = sanitize_filename(filename) + ".json"
     #with open(fullfilename, 'w', encoding='utf-8') as f:
     #    json.dump(data, f, ensure_ascii=False, indent=4)
