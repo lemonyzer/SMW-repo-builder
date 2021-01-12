@@ -1,3 +1,6 @@
+import json
+import jsonpickle
+from json import JSONEncoder
 class Project:
     # SuperMarioWars 2014.06.05 UnityNetwork
     # SuperMarioWars 2015.04.05_2_Unity5_createPrefab_moreGenericWayV3_Works_Next_FullCharacterWithAnims
@@ -36,3 +39,8 @@ class Project:
 
     def __lt__(self, other):
         return self.timestamp < other.timestamp
+
+# subclass JSONEncoder
+class ProjectEncoder(JSONEncoder):
+        def default(self, o):
+            return o.__dict__

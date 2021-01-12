@@ -7,6 +7,8 @@ from email.utils import formatdate
 from html import escape
 
 from project import Project
+from project import ProjectEncoder
+
 import os
 from pathlib import Path, PurePath
 from unrar import rarfile
@@ -638,9 +640,11 @@ def loadDatabase():
     return 0
 
 def saveDatabase(data, filename):
-    fullfilename = sanitize_filename(filename) + ".json"
-    with open(fullfilename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    print("Printing to check how it will look like")
+    print(ProjectEncoder().encode(data))
+    #fullfilename = sanitize_filename(filename) + ".json"
+    #with open(fullfilename, 'w', encoding='utf-8') as f:
+    #    json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
