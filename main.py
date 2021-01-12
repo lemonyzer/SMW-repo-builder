@@ -670,8 +670,70 @@ def saveDatabase(data, filename):
         encoded_data = jsonpickle.encode(data)
         json.dump(encoded_data, json_file)
 
+
+def user_input_path(input_message, check_valid_path):
+    repeat = True
+    while repeat:
+        os.system("cls")
+        print ("{}".format(input_message))
+        input_text = input(">>")
+        if (check_valid_path):
+            path = Path(input_text)
+            if path.is_dir():
+                return path
+        else:
+            return input_text
+
+def cli_menu():
+    line_text = "Welcome to SMW-repo-builder\n\
+        [1] - set input Folder (rar-Files) \n\
+        [2] - set output Folder (extraction) \n\
+        [3] - set output Folder (repo) \n\
+        [4] - read input Folder \n\
+        [5] - output project list \n\
+        [6] - compare project list sorting \n\
+        [7] - \n\
+        [8] - \n\
+        [9] - \n\
+        [0] - Exit \n\
+        \n\
+        Options: \n\
+        input-Folder: \n\
+        output-Folder (extract): \n\
+        output-Folder (repo): \n\
+        "
+    print(line_text)
+
+
+def command_line_interface():
+    # while x not in ["yes", "YES", "N", "n", "No"]:
+    #     if x in ["N", "n", "No"]:
+    #         exit()
+    #     elif x in ["yes", "YES"]:
+    #         break
+    input_message = ">>"
+    while (True):
+        x = ""
+        os.system('cls')
+        cli_menu()
+        x = input(input_message)
+        if x == "0":
+            exit()
+        elif x == "1":
+            source_folder = user_input_path("rar files directory", True)
+        elif x == "2":
+            extraction_folder = user_input_path("extraction directory", True)
+        elif x == "3":
+            repository_folder = user_input_path("repository directory", True)
+        else:
+            pass
+
+    
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
+    command_line_interface()
 
     # @echo off
     # rem get files (ordered)
