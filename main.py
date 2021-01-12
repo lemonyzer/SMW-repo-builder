@@ -16,6 +16,8 @@ import shutil
 from git import Repo, NoSuchPathError, InvalidGitRepositoryError
 
 import json
+import jsonpickle
+
 from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip install pathvalidate
 
 # Press Umschalt+F10 to execute it or replace it with your code.
@@ -636,20 +638,37 @@ def rootElements(list):
     return rootelements
 
 
-def loadDatabase():
-    return 0
+def loadDatabase(filename):
+    filename = sanitize_filename(filename + ".pickel.json")
+    if not os.path.exists(filename):
+        pass
+    else:
+        with open(filename) as json_file:
+            data_encoded = json.load(json_file)
+            data = jsonpickle.decode(data_encoded)
+            return data
+
+    return None
+    
 
 def saveDatabase(data, filename):
     #print("Printing to check how it will look like")
     #print(ProjectEncoder().encode(data))
 
-    print("Encode Project Objects into JSON formatted Data using custom JSONEncoder")
-    dataJSONData = json.dumps(data, indent=4, cls=ProjectEncoder)
-    print(dataJSONData)
-    
-    #fullfilename = sanitize_filename(filename) + ".json"
-    #with open(fullfilename, 'w', encoding='utf-8') as f:
-    #    json.dump(data, f, ensure_ascii=False, indent=4)
+    #print("Encode Project Objects into JSON formatted Data using custom JSONEncoder")
+    #dataJSONData = json.dumps(data, indent=4, cls=ProjectEncoder)
+    #print(dataJSONData)
+
+    print("saving {} with {} elements".format(filename,len(data)))
+
+    fullfilename = sanitize_filename(filename + ".json")
+    with open(fullfilename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, cls=ProjectEncoder, indent=4)
+
+    fullfilename_pickle = sanitize_filename(filename + ".pickel.json")
+    with open(fullfilename_pickle, 'w') as json_file:
+        encoded_data = jsonpickle.encode(data)
+        json.dump(encoded_data, json_file)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -775,9 +794,17 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
+    waitForInput("check sorted list [yes,no]:")
+
+    print("saving database...")
     saveDatabase(projects, "projects")
     saveDatabase(projectsSorted, "projectsSorted")
-    waitForInput("check sorted list [yes,no]:")
+    print("loading database...")
+    loadedProjects = loadDatabase("projectsSorted")
+    print("loaded {} elements".format(len(loadedProjects)))
+    print("loaded Projects:")
+    printProjects(loadedProjects)
+    waitForInput("check loaded projects list [yes,no]:")
 
     showRARArchiveRootFolder = True
     if showRARArchiveRootFolder:

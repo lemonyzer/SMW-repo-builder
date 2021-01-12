@@ -43,14 +43,7 @@ class Project:
 # subclass JSONEncoder
 class ProjectEncoder(JSONEncoder):
         def default(self, o):
-            # if isinstance(o, date):
-            #     serial = o.isoformat()
-            #     return serial
-
-            # if isinstance(o, time):
-            #     serial = o.isoformat()
-            #     return serial
-            
+                 
             if isinstance(o, set):
                 serial = list(o)
                 return serial
