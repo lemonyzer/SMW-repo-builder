@@ -675,8 +675,10 @@ def user_input_path(input_message, check_valid_path):
     repeat = True
     while repeat:
         os.system("cls")
-        print ("{}".format(input_message))
+        print ("{}, [0] to cancel".format(input_message))
         input_text = input(">>")
+        if input_text == "0":
+            break
         if (check_valid_path):
             path = Path(input_text)
             if path.is_dir():
@@ -684,8 +686,10 @@ def user_input_path(input_message, check_valid_path):
         else:
             return input_text
 
+
 def cli_menu():
-    line_text = "Welcome to SMW-repo-builder\n\
+    line_text = "\
+        Welcome to SMW-repo-builder\n\
         [1] - set input Folder (rar-Files) \n\
         [2] - set output Folder (extraction) \n\
         [3] - set output Folder (repo) \n\
@@ -706,11 +710,6 @@ def cli_menu():
 
 
 def command_line_interface():
-    # while x not in ["yes", "YES", "N", "n", "No"]:
-    #     if x in ["N", "n", "No"]:
-    #         exit()
-    #     elif x in ["yes", "YES"]:
-    #         break
     input_message = ">>"
     while (True):
         x = ""
@@ -727,11 +726,14 @@ def command_line_interface():
             repository_folder = user_input_path("repository directory", True)
         else:
             pass
-
     
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
+    systemPath = "R:\\SMW-Test"
+    systemPathRepo = "R:\\repoTest"
+    extractTargetSystemPath = "R:\\extractTest"
 
     command_line_interface()
 
@@ -755,17 +757,7 @@ if __name__ == '__main__':
     projects = list()
     files = list()
 
-    #systemPath = "D:\\_delete\\SuperMarioWars"
-    #systemPath = "J:\\src\\SuperMarioWars"
-    systemPath = "R:\\SMW-Test"
-    #systemPath = "D:\_temp_test"
-#    systemPath = "D:\\_temp"
-#    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars"
-#    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreation"
-#    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\_MapCreationResume"
-#    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\SuperMarioWars 2014.08.06 PhotonUnityNetwork - Authorative Movement - Movement with Networked Rigidbody2D"
-#    systemPath = "Z:\\e_projekte\\Unity\\SuperMarioWars\\SuperMarioWars 2014.08.19 PhotonUnityNetwork - Authorative Movement - Movement without Unity Physics - New InputScript"
-
+    
     prokectsnew = loadDirectoryList(systemPath)
     printProjects(prokectsnew)
 
@@ -774,9 +766,6 @@ if __name__ == '__main__':
     # showFiles()
     # showProjects()
     # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
-
-    systemPathRepo = "R:\\repoTest"
-    extractTargetSystemPath = "R:\\extractTest"
 
     printRarDetails = False
 
