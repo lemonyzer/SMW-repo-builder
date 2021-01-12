@@ -1,5 +1,3 @@
-import json
-#import jsonpickle
 from json import JSONEncoder
 class Project:
     # SuperMarioWars 2014.06.05 UnityNetwork
@@ -40,12 +38,13 @@ class Project:
     def __lt__(self, other):
         return self.timestamp < other.timestamp
 
+
 # subclass JSONEncoder
 class ProjectEncoder(JSONEncoder):
-        def default(self, o):
-                 
-            if isinstance(o, set):
-                serial = list(o)
-                return serial
+    def default(self, o):
+                
+        if isinstance(o, set):
+            serial = list(o)
+            return serial
 
-            return o.__dict__
+        return o.__dict__
