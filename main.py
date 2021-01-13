@@ -688,6 +688,11 @@ def user_input_path(input_message, check_valid_path):
 
 
 def cli_menu():
+    # dependencies: 
+    # level 0: 1,2,3 possible
+    # level 1: 4
+    # level 2: 5,6,7
+    #
     line_text = "\
         Welcome to SMW-repo-builder\n\
         [1] - set input Folder (rar-Files) \n\
@@ -696,15 +701,32 @@ def cli_menu():
         [4] - read input Folder \n\
         [5] - output project list \n\
         [6] - compare project list sorting \n\
-        [7] - export database [pass]\n\
-        [8] - import database [pass]\n\
-        [9] - \n\
+        [ ] - search through rar-Files \n\
+        [ ] - search for file inside rar-Files \n\
+        [ ] - search for text inside rar-Files \n\
+        [ ] - output timespan of all rar-Files\n\
+        [ ] - output rootElements of all rar-Files\n\
+        [ ] - export database [pass]\n\
+        [ ] - import database [pass]\n\
+            \n\
+        [ ] - batch: extract all (--- ### ---) rar-Files\n\
+        [ ] - batch: built repo from extracted (--- ### ---)\n\
+        [100] - batch: run auto workflow (--- ### ---)\n\
         [0] - Exit \n\
         \n\
         Options: \n\
         input-Folder: \n\
         output-Folder (extract): \n\
         output-Folder (repo): \n\
+        \n\
+        Stats:\n\
+            Import Database\n\
+                Projects imported: xyz\n\
+            readed Folder \n\
+                Files found: ###\n\
+                rar-Files found: ###\n\
+                Projects found: ###\n\
+            \n\
         "
     print(line_text)
 
