@@ -696,8 +696,8 @@ def cli_menu():
         [4] - read input Folder \n\
         [5] - output project list \n\
         [6] - compare project list sorting \n\
-        [7] - \n\
-        [8] - \n\
+        [7] - export database [pass]\n\
+        [8] - import database [pass]\n\
         [9] - \n\
         [0] - Exit \n\
         \n\
@@ -726,7 +726,7 @@ def command_line_interface():
             repository_folder = user_input_path("repository directory", True)
         else:
             pass
-    
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

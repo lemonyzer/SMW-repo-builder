@@ -1,0 +1,8 @@
+/.vscode/
+UnRARDLL.exe
+__pycache__/
+projects.json
+projects.pickel.json
+projectsSorted.json
+projectsSorted.pickel.json
+
