@@ -477,7 +477,7 @@ def findProjectRepoLevel(projectExtractedPath):
     #     pass
 
 
-def waitForInput(message):
+def wait_for_input(message):
     x = ""
     while x not in ["yes", "YES", "N", "n", "No"]:
         x = input(message)
@@ -530,7 +530,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 
     if not Path(repoSystemPath + "\\.gitignore").exists():
         message = "no .gitingore file found, continue? [yes/No]:"
-        waitForInput(message)
+        wait_for_input(message)
 
     if extractTargetRoot.exists() and extractTargetRoot.is_dir():
         print()
@@ -541,7 +541,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             i=i+1
             print()
             print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
-            ## waitForInput("continue? [yes/No]:")
+            ## wait_for_input("continue? [yes/No]:")
             ## clean up
             removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
 
@@ -785,7 +785,7 @@ def command_line_interface():
             pass
 
 
-def analyze_rar_files(projects, rootFolders):
+def analyze_rar_files(projects, rootFolders, printRarDetails=False):
     for p in app.projects:
         if rarfile.is_rarfile(p.systemFilePath):
             p.israrfile = True
@@ -883,13 +883,13 @@ if __name__ == '__main__':
     # printProjects(app._project_list_load_via_pathlib)
     print()
     project_list_stats(app._project_list_load_via_pathlib, True)
-    waitForInput("app._project_list_load_via_pathlib, continue?")
+    wait_for_input("app._project_list_load_via_pathlib, continue?")
 
     ###
-    ### read directory: Method A (os, recursive)
+    ### read directory: Method A (os, recursive, limitation deepness = 2!!!) - use Method B: load_directory_list() instead!
     ###
     ### app.projects contains matching rar-Files 
-    ### app.files contains matching rar-Files 
+    ### app.files contains ALL files (not only rar-files)
     ###
     print("workWithFilelist...")
     workWithFilelist(app.system_path_rar_files, app.projects, app.files)
@@ -897,32 +897,42 @@ if __name__ == '__main__':
     print()
     #project_list_stats(app.projects, False)                     # CAUTION! workWithFilelist doesn't analyze rar-Files, project.israrfile is False
     showFiles(app.files)
-    waitForInput("app._project_list_load_via_os, continue?")
+    wait_for_input("app._project_list_load_via_os, continue?")
 
-    printRarDetails = False
-
+    
+    ####
+    #### read directory: Method A 
+    #### Analyze RAR Files (still for Method A)
+    #### after running this, p in app.projects have p.israrfile is set
+    #### after running this, ... TODO need to check what else analyze_rar_files is doing! (timestamp, ...) 
+    ####                         TODO compare DOING with reading directory: Method B 
+    ####
+    print("analyze_rar_files...")
     rootFolders = list()
-    analyze_rar_files(app.projects, rootFolders)
+    analyze_rar_files(app.projects, rootFolders, printRarDetails=True)
+    project_list_stats(app.projects, True)  # app.projects with israrfile set
+    wait_for_input("analyze_rar_files(), continue?")
 
-    waitForInput("analyze_rar_files(), continue?")
+    ##
+    ## sort Projects
+    ##
+    sort_show_projects = False                # use to compare lists before and after sorting
 
-    numOfRarFiles = 0
-    for p in app.projects:
-        if p.israrfile:
-            numOfRarFiles = numOfRarFiles + 1
-
-    #testProjectList = list()
-
-    showProjects = True
-
-    if showProjects:
-        print("projects")
+    if sort_show_projects:
+        print("projects (unsorted)")
         printProjects(app.projects)
 
-    #projects.sort(key=operator.attrgetter('timestamp'))    # inline sorting
+    ###
+    ### sort Projects: Method A (inline sorting)
+    ###
+    # app.projects.sort(key=operator.attrgetter('timestamp'))    # inline sorting
+
+    ###
+    ### sort Projects: Method B (sort copy)
+    ###
     projectsSorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
 
-    if showProjects:
+    if sort_show_projects:
         print("projects Sorted")
         printProjects(projectsSorted)
 
@@ -937,7 +947,7 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
-    waitForInput("check sorted list [yes,no]:")
+    wait_for_input("check sorted list [yes,no]:")
 
     print("saving database...")
     saveDatabase(app.projects, "projects")
@@ -947,9 +957,13 @@ if __name__ == '__main__':
     print("loaded {} elements".format(len(loadedProjects)))
     print("loaded Projects:")
     printProjects(loadedProjects)
-    waitForInput("check loaded projects list [yes,no]:")
+    wait_for_input("check loaded projects list [yes,no]:")
 
     showRARArchiveRootFolder = True
+    numOfRarFiles = 0
+    for p in app.projects:
+        if p.israrfile:
+            numOfRarFiles = numOfRarFiles + 1
     if showRARArchiveRootFolder:
         print("{:<30}: {}".format("numOfRarFiles", numOfRarFiles))
         print("RAR rootFolders")
@@ -991,7 +1005,7 @@ if __name__ == '__main__':
             compareresult = "!!!"
         print("{:<15} {} {:<15} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
 
-    waitForInput("check timestamps [yes,no]:")
+    wait_for_input("check timestamps [yes,no]:")
 
     ##
     ##  Workflow
@@ -1001,7 +1015,7 @@ if __name__ == '__main__':
     #       git commiting
     ##
 
-    waitForInput("start workflow? [yes,no]:")
+    wait_for_input("start workflow? [yes,no]:")
     gitcmds = list()
     workflow(projectsSorted, app.system_path_extraction, app.system_path_repo)     #  FIX project order
 
