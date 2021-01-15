@@ -20,6 +20,8 @@ import jsonpickle
 
 from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip install pathvalidate
 
+from app import App
+
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -741,11 +743,20 @@ def command_line_interface():
         if x == "0":
             exit()
         elif x == "1":
+            pass
             source_folder = user_input_path("rar files directory", True)
         elif x == "2":
+            pass
             extraction_folder = user_input_path("extraction directory", True)
         elif x == "3":
+            pass
             repository_folder = user_input_path("repository directory", True)
+        elif x == "4":
+            pass
+        elif x == "5":
+            pass
+        elif x == "6":
+            pass
         else:
             pass
 
@@ -753,11 +764,11 @@ def command_line_interface():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    systemPath = "R:\\SMW-Test"
-    systemPathRepo = "R:\\repoTest"
-    extractTargetSystemPath = "R:\\extractTest"
+    system_path_rar_files = "R:\\SMW-Test"
+    system_path_repo = "R:\\repoTest"
+    system_path_extraction = "R:\\extractTest"
 
-    command_line_interface()
+    # command_line_interface()
 
     # @echo off
     # rem get files (ordered)
@@ -780,10 +791,10 @@ if __name__ == '__main__':
     files = list()
 
     
-    prokectsnew = loadDirectoryList(systemPath)
+    prokectsnew = loadDirectoryList(system_path_rar_files)
     printProjects(prokectsnew)
 
-    workWithFilelist(systemPath)
+    workWithFilelist(system_path_rar_files)
 
     # showFiles()
     # showProjects()
@@ -933,7 +944,7 @@ if __name__ == '__main__':
 
     waitForInput("start workflow? [yes,no]:")
     gitcmds = list()
-    workflow(projectsSorted, extractTargetSystemPath, systemPathRepo)     #  FIX project order
+    workflow(projectsSorted, system_path_extraction, system_path_repo)     #  FIX project order
 
     for i in gitcmds:
         print(i)

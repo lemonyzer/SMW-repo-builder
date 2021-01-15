@@ -1,5 +1,8 @@
-class Option:
+class App:
 
+    projects_load_via_os = list()
+    projects_load_via_pathlib = list()
+    files = list()
 
     def __init__(self, rar_directory, extraction_directory, repo_directory):
         self.rar_directory_system_path = rar_directory
