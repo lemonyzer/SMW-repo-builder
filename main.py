@@ -764,9 +764,10 @@ def command_line_interface():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    system_path_rar_files = "R:\\SMW-Test"
-    system_path_repo = "R:\\repoTest"
-    system_path_extraction = "R:\\extractTest"
+    app = App()
+    app.system_path_rar_files
+    app.system_path_repo
+    app.system_path_extraction
 
     # command_line_interface()
 
@@ -791,10 +792,10 @@ if __name__ == '__main__':
     files = list()
 
     
-    prokectsnew = loadDirectoryList(system_path_rar_files)
+    prokectsnew = loadDirectoryList(app.system_path_rar_files)
     printProjects(prokectsnew)
 
-    workWithFilelist(system_path_rar_files)
+    workWithFilelist(app.system_path_rar_files)
 
     # showFiles()
     # showProjects()
@@ -944,7 +945,7 @@ if __name__ == '__main__':
 
     waitForInput("start workflow? [yes,no]:")
     gitcmds = list()
-    workflow(projectsSorted, system_path_extraction, system_path_repo)     #  FIX project order
+    workflow(projectsSorted, app.system_path_extraction, app.system_path_repo)     #  FIX project order
 
     for i in gitcmds:
         print(i)
