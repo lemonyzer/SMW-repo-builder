@@ -768,13 +768,13 @@ def command_line_interface():
             exit()
         elif x == "1":
             pass
-            source_folder = user_input_path("rar files directory", True)
+            # source_folder = user_input_path("rar files directory", True)
         elif x == "2":
             pass
-            extraction_folder = user_input_path("extraction directory", True)
+            # extraction_folder = user_input_path("extraction directory", True)
         elif x == "3":
             pass
-            repository_folder = user_input_path("repository directory", True)
+            # repository_folder = user_input_path("repository directory", True)
         elif x == "4":
             pass
         elif x == "5":
@@ -887,6 +887,7 @@ if __name__ == '__main__':
 
     ###
     ### read directory: Method A (os, recursive)
+    ###
     ### app.projects contains matching rar-Files 
     ### app.files contains matching rar-Files 
     ###

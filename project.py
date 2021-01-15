@@ -18,18 +18,18 @@ class Project:
         self.extractPathRepoBase = ""
         self.rfc2822 = ""
 
-    @deprecation.deprecated("please, use rootElements!")
     @property
+    @deprecation.deprecated("please, use rootElements!")
     def rarRootFolder(self):
         return self._rarRootFolder
 
-    @deprecation.deprecated("please, use rootElements!")
     @rarRootFolder.setter
+    @deprecation.deprecated("please, use rootElements!")
     def rarRootFolder(self, value):
         self._rarRootFolder = value
 
-    @deprecation.deprecated("please, use rootElements!")
     @rarRootFolder.deleter
+    @deprecation.deprecated("please, use rootElements!")
     def rarRootFolder(self):
         del self._rarRootFolder
 
