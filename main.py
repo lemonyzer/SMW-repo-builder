@@ -38,20 +38,20 @@ def isDirectoryEntryRelevant(entry):
     return False
 
 
-def loadDirectoryList(system_path_rar_files):
+def load_directory_list(system_path_rar_files):
     # iterates (recursive) through all files and folders in system_path_rar_files and built projectsList
     # difference between path.absolut() path.resolve()  https://discuss.python.org/t/pathlib-absolute-vs-resolve/2573
     #                                                   https://stackoverflow.com/questions/42513056/how-to-get-absolute-path-of-a-pathlib-path-object
     # print("{:<30} {}".format(system_path_rar_files, "... loading ..."))
-    pathEntries = Path(system_path_rar_files)
-    print("{:<30} {}".format(str(pathEntries), "... loading ..."))
+    path_entries = Path(system_path_rar_files)
+    print("{:<30} {}".format(str(path_entries), "... loading ..."))
 
-    projectList = list()
+    project_list = list()
 
-    for entry in pathEntries.iterdir():
+    for entry in path_entries.iterdir():
         if entry.is_dir():
-            print("{:<30}: {} {}".format(str(pathEntries), "directory", entry.name))
-            projectList.extend(loadDirectoryList(str(entry)))   # FIX: rekursive Funktion muss Zwischenergebnisse Speichern!!!
+            print("{:<30}: {} {}".format(str(path_entries), "directory", entry.name))
+            project_list.extend(load_directory_list(str(entry)))   # FIX: rekursive Funktion muss Zwischenergebnisse Speichern!!!
 
             ''' recursive function
             ### this part is not needed
@@ -59,19 +59,19 @@ def loadDirectoryList(system_path_rar_files):
             print("test ...")
             print(subPathEntries)
             for subPath in subPathEntries.iterdir():
-                #print("{:<30}: {} {}".format(str(pathEntries.resolve()), "directory", entry.name))
+                #print("{:<30}: {} {}".format(str(path_entries.resolve()), "directory", entry.name))
                 print("subPath: (should not occure) - " + str(subPath))
             '''
 
         if entry.is_file():
-            print("{:<30}: {} {}".format(str(pathEntries), "file", entry.name))
-            project = readProjectDetailsFromSystemPath(str(entry))
-            projectList.append(project)
+            print("{:<30}: {} {}".format(str(path_entries), "file", entry.name))
+            project = read_project_details_from_system_path(str(entry))
+            project_list.append(project)
 
-    return projectList
+    return project_list
 
 
-def readProjectDetailsFromSystemPath(fileSystemPath):
+def read_project_details_from_system_path(fileSystemPath):
     filePath = Path(fileSystemPath)
     # print("read project details from " + str(filePath))
     # projTimestamp = getTimestampFromFilename(entry)
@@ -81,28 +81,29 @@ def readProjectDetailsFromSystemPath(fileSystemPath):
     projSystemPath = str(filePath)
     currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, filePath.name)
 
-    readRarSpecificDetailsFromSystemPath(currentProject)
+    read_rar_specific_details_from_system_path(currentProject)
     return currentProject
 
 
-def readRarSpecificDetailsFromSystemPath(project):
+def read_rar_specific_details_from_system_path(project):
 
     if rarfile.is_rarfile(project.systemFilePath):
         project.israrfile = True
         rar = rarfile.RarFile(project.systemFilePath)
-        rootelements = rootElements(rar.namelist())
+        rootelements = root_elements(rar.namelist())
         project.setRootElements(rootelements)
         rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]       # TODO wrong! could exist more than on root Element -> use rootelements instead!
         project.rarRootFolder = rootFolderInRARArchive
         #rootFolders.append(rootFolderInRARArchive)
     else:
         project.israrfile = False
-
+    print("{:<30}: {}".format(project.systemFilePath, "file" + (" RAR" if project.israrfile else " NOT RAR marked")))   # conditional expression
+    
     return
 
 # workWithFilelist()
 # limitation: reads files max. 2 level deeper than system_path
-# depricated! use loadDirectoryList - works recursively
+# depricated! use load_directory_list - works recursively
 def workWithFilelist(system_path_rar_files, project_list, file_list):
 
     entries = os.listdir(system_path_rar_files)
@@ -110,8 +111,8 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
 
     # all Files&Folders in root
     for entry in entries:
-        if os.path.isfile(os.path.join(system_path_rar_files, entry)):
-            file_list.append(entry)
+        #if os.path.isfile(os.path.join(system_path_rar_files, entry)):                                 # dublicates! don't remove twice!
+        #    file_list.append(entry)
         print("Checking entry (Level 0) {}...".format(os.path.join(system_path_rar_files, entry)))
         if isDirectoryEntryRelevant(entry):
             # projTimestamp = getTimestampFromFilename(entry)
@@ -157,13 +158,14 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
         else:
             print("... skipped ...")
 
-    print("{:<30}: {}".format("numberOfFiles", len(file_list)))
-    print("{:<30}: {}".format("numberOfProjects", len(project_list)))
+    print("{:<30}: {}".format("number of files & folders (file_list)", len(file_list)))
+    print("{:<30}: {}".format("number of projects (project_list)", len(project_list)))
 
 
 def showFiles(file_list):
+    print("showFiles()...")
     for e in file_list:
-        print(e)
+        print(f'- {e}')
 
 
 def showProjects(project_list):
@@ -654,10 +656,10 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 time.sleep(0.2)
         removeAllProjectFilesFromRepo(repoSystemPath)  # delete last project extracted files
 
-def rootElements(list):
-    # analyze the rarfile.filenames() list to find all root elements
+def root_elements(rarfile_content_filenamelist):
+    # analyze the rarfile.filenames() list to find all root elements (files and folders)
     rootelements = set()
-    for item in list:
+    for item in rarfile_content_filenamelist:
         rootelements.add(item.split("\\")[0])
     return rootelements
 
@@ -798,7 +800,7 @@ def analyze_rar_files(projects, rootFolders):
                             print("{:<30}: {}".format("", file))
 
             #print(rar.printdir())
-            rootelements = rootElements(rar.namelist())
+            rootelements = root_elements(rar.namelist())
             p.setRootElements(rootelements)
             print("{:<30}: {}".format("rootelements", len(p.getRootElements())))
             for el in p.getRootElements():
@@ -830,8 +832,18 @@ def analyze_rar_files(projects, rootFolders):
 
 
 
-def project_list_stats(projects):
+def project_list_stats(projects, show_non_rar_files=False):
+    print("project_list_stats...")
+    print("project_list_stats, show non rar files = " + "True" if show_non_rar_files else "False")
+    rarFiles = 0
+    for p in projects:
+        if p.israrfile:
+            rarFiles += 1 
+        else:
+            if show_non_rar_files:
+                print(p.systemFilePath)
     print(f'num of projects: {len(projects)}')
+    print(f'num of rar-files: {rarFiles}')
 
 
 # Press the green button in the gutter to run the script.
@@ -866,9 +878,11 @@ if __name__ == '__main__':
     ###
     ### read directory: Method B (pathlib, recursive)
     ###
-    app._project_list_load_via_pathlib = loadDirectoryList(app.system_path_rar_files)
+    print("load_directory_list...")
+    app._project_list_load_via_pathlib = load_directory_list(app.system_path_rar_files)
     # printProjects(app._project_list_load_via_pathlib)
-    project_list_stats(app._project_list_load_via_pathlib)
+    print()
+    project_list_stats(app._project_list_load_via_pathlib, True)
     waitForInput("app._project_list_load_via_pathlib, continue?")
 
     ###
@@ -876,9 +890,11 @@ if __name__ == '__main__':
     ### app.projects contains matching rar-Files 
     ### app.files contains matching rar-Files 
     ###
+    print("workWithFilelist...")
     workWithFilelist(app.system_path_rar_files, app.projects, app.files)
     # printProjects(app.system_path_rar_files)
-    project_list_stats(app.projects)
+    print()
+    #project_list_stats(app.projects, False)                     # CAUTION! workWithFilelist doesn't analyze rar-Files, project.israrfile is False
     showFiles(app.files)
     waitForInput("app._project_list_load_via_os, continue?")
 
