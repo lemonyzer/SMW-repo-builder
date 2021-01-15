@@ -100,13 +100,19 @@ def readRarSpecificDetailsFromSystemPath(project):
 
     return
 
-
+# workWithFilelist()
+# limitation: reads files max. 2 level deeper than system_path
+# depricated! use loadDirectoryList - works recursively
 def workWithFilelist(system_path_rar_files, project_list, file_list):
 
     entries = os.listdir(system_path_rar_files)
-    #global file_list
-    file_list = entries.copy()
+    # file_list.extend(entries)
+
+    # all Files&Folders in root
     for entry in entries:
+        if os.path.isfile(os.path.join(system_path_rar_files, entry)):
+            file_list.append(entry)
+        print("Checking entry (Level 0) {}...".format(os.path.join(system_path_rar_files, entry)))
         if isDirectoryEntryRelevant(entry):
             # projTimestamp = getTimestampFromFilename(entry)
             projTimestamp = getTimestampFromFilesystem(system_path_rar_files + "\\" + entry)
@@ -115,16 +121,28 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
             projSystemPath = system_path_rar_files + "\\" + entry
             currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, entry)
             project_list.append(currentProject)
+        else:
+            print("... skipped ...")
 
+    # all Files&Folders in subdirectories of root (direct subdirectories of root, 1 level deeper)
     # List all subdirectories using os.listdir
     basepath = system_path_rar_files
     for entry in os.listdir(basepath):
+        if os.path.isfile(os.path.join(basepath, entry)):
+            file_list.append(entry)
+        # in this loop only files&folder in Level 1
+        print("Checking entry (Level 1) {}...".format(os.path.join(basepath, entry)))
         if os.path.isdir(os.path.join(basepath, entry)):
-            print("Checking subdirectory {}...".format(os.path.join(basepath, entry)))
+            print("Checking subdirectory (Level 1) {}...".format(os.path.join(basepath, entry)))
 
             subdirectory = os.path.join(basepath, entry)
             subentries = os.listdir(subdirectory)
+            # all Files&Folders in subdirectories of subdirectory (2 level deeper)
             for subentry in subentries:
+                print("Checking subdirectory (Level 2) {}...".format(os.path.join(basepath, subentry)))
+                if os.path.isfile(os.path.join(subdirectory, subentry)):
+                    file_list.append(subentry)
+
                 if isDirectoryEntryRelevant(subentry):
                     # projTimestamp = getTimestampFromFilename(entry)
 
@@ -134,8 +152,12 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
                     projSystemPath = os.path.join(subdirectory, subentry)
                     currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, subentry)
                     project_list.append(currentProject)
+                else:
+                    print("... skipped ...")
+        else:
+            print("... skipped ...")
 
-    print("{:<30}: {}".format("numberOfFiles", len(entries)))
+    print("{:<30}: {}".format("numberOfFiles", len(file_list)))
     print("{:<30}: {}".format("numberOfProjects", len(project_list)))
 
 
