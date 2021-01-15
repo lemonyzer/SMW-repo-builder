@@ -38,12 +38,12 @@ def isDirectoryEntryRelevant(entry):
     return False
 
 
-def loadDirectoryList(systemPath):
-    # iterates (recursive) trough all files and folders in systemPath and built projectsList
+def loadDirectoryList(system_path_rar_files):
+    # iterates (recursive) through all files and folders in system_path_rar_files and built projectsList
     # difference between path.absolut() path.resolve()  https://discuss.python.org/t/pathlib-absolute-vs-resolve/2573
     #                                                   https://stackoverflow.com/questions/42513056/how-to-get-absolute-path-of-a-pathlib-path-object
-    # print("{:<30} {}".format(systemPath, "... loading ..."))
-    pathEntries = Path(systemPath)
+    # print("{:<30} {}".format(system_path_rar_files, "... loading ..."))
+    pathEntries = Path(system_path_rar_files)
     print("{:<30} {}".format(str(pathEntries), "... loading ..."))
 
     projectList = list()
@@ -51,7 +51,7 @@ def loadDirectoryList(systemPath):
     for entry in pathEntries.iterdir():
         if entry.is_dir():
             print("{:<30}: {} {}".format(str(pathEntries), "directory", entry.name))
-            loadDirectoryList(str(entry))
+            projectList.extend(loadDirectoryList(str(entry)))   # FIX: rekursive Funktion muss Zwischenergebnisse Speichern!!!
 
             ''' recursive function
             ### this part is not needed
