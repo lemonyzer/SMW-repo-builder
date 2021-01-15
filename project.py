@@ -1,3 +1,4 @@
+import deprecation
 from json import JSONEncoder
 class Project:
     # SuperMarioWars 2014.06.05 UnityNetwork
@@ -11,11 +12,26 @@ class Project:
         self.fileName = fileName
 
         self.israrfile = False
-        self.rarRootFolder = ""
+        self._rarRootFolder = ""         # TODO CAUTION! wrong! could exist more than on root Element -> use rootElements instead!
         self.rootElements = set()
         self.extractPath = ""
         self.extractPathRepoBase = ""
         self.rfc2822 = ""
+
+    @deprecation.deprecated("please, use rootElements!")
+    @property
+    def rarRootFolder(self):
+        return self._rarRootFolder
+
+    @deprecation.deprecated("please, use rootElements!")
+    @rarRootFolder.setter
+    def rarRootFolder(self, value):
+        self._rarRootFolder = value
+
+    @deprecation.deprecated("please, use rootElements!")
+    @rarRootFolder.deleter
+    def rarRootFolder(self):
+        del self._rarRootFolder
 
     def setRootElements(self, newSet):
         self.rootElements = newSet
