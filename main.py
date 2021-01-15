@@ -761,47 +761,7 @@ def command_line_interface():
             pass
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-
-    app = App()
-    app.system_path_rar_files
-    app.system_path_repo
-    app.system_path_extraction
-
-    # command_line_interface()
-
-    # @echo off
-    # rem get files (ordered)
-    # rem extract date and commit details
-
-    # rem (optional) cronical History
-    # rem Option A: change system time
-    # rem Option B: git parameter
-
-    # rem integrate next commit
-    # rem remove all project files from git repo
-    # rem extract all project file to repo-folder
-    # rem apply gitignore
-    # rem approve all (file) changes
-    # rem commit
-
-    # project_list = list()
-    # files = list()
-
-    
-    prokectsnew = loadDirectoryList(app.system_path_rar_files)
-    printProjects(prokectsnew)
-
-    workWithFilelist(app.system_path_rar_files, app.projects, app.files)
-
-    # showFiles(app.files)
-    # showProjects()
-    # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
-
-    printRarDetails = False
-
-    rootFolders = list()
+def analyze_rar_files(projects, rootFolders):
     for p in app.projects:
         if rarfile.is_rarfile(p.systemFilePath):
             p.israrfile = True
@@ -845,6 +805,67 @@ if __name__ == '__main__':
         else:
             print(p.systemFilePath + " is not a RAR-File!")
             p.israrfile = False
+
+
+
+def project_list_stats(projects):
+    print(f'num of projects: {len(projects)}')
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+
+    app = App()
+    app.system_path_rar_files
+    app.system_path_repo
+    app.system_path_extraction
+
+    # command_line_interface()
+
+    # @echo off
+    # rem get files (ordered)
+    # rem extract date and commit details
+
+    # rem (optional) cronical History
+    # rem Option A: change system time
+    # rem Option B: git parameter
+
+    # rem integrate next commit
+    # rem remove all project files from git repo
+    # rem extract all project file to repo-folder
+    # rem apply gitignore
+    # rem approve all (file) changes
+    # rem commit
+
+    ##
+    ## read directory
+    ##
+
+    ###
+    ### read directory: Method B (pathlib, recursive)
+    ###
+    app._project_list_load_via_pathlib = loadDirectoryList(app.system_path_rar_files)
+    # printProjects(app._project_list_load_via_pathlib)
+    project_list_stats(app._project_list_load_via_pathlib)
+    waitForInput("app._project_list_load_via_pathlib, continue?")
+
+    ###
+    ### read directory: Method A (os, recursive)
+    ### app.projects contains matching rar-Files 
+    ### app.files contains matching rar-Files 
+    ###
+    workWithFilelist(app.system_path_rar_files, app.projects, app.files)
+    # printProjects(app.system_path_rar_files)
+    project_list_stats(app.projects)
+    showFiles(app.files)
+    waitForInput("app._project_list_load_via_os, continue?")
+
+    printRarDetails = False
+
+    rootFolders = list()
+    analyze_rar_files(app.projects, rootFolders)
+
+    waitForInput("analyze_rar_files(), continue?")
 
     numOfRarFiles = 0
     for p in app.projects:
