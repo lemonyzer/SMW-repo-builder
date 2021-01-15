@@ -930,16 +930,16 @@ if __name__ == '__main__':
     ###
     ### sort Projects: Method B (sort copy)
     ###
-    projectsSorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
+    app.projects_sorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
 
     if sort_show_projects:
         print("projects Sorted")
-        printProjects(projectsSorted)
+        printProjects(app.projects_sorted)
 
     print("compare projects lists")
-    for i in range(len(projectsSorted)):
+    for i in range(len(app.projects_sorted)):
         p = app.projects[i].fileName
-        ps = projectsSorted[i].fileName
+        ps = app.projects_sorted[i].fileName
         compareresult = "not tested"
         if p == ps:
             compareresult = "==="
@@ -951,9 +951,9 @@ if __name__ == '__main__':
 
     print("saving database...")
     saveDatabase(app.projects, "projects")
-    saveDatabase(projectsSorted, "projectsSorted")
+    saveDatabase(app.projects_sorted, "app.projects_sorted")
     print("loading database...")
-    loadedProjects = loadDatabase("projectsSorted")
+    loadedProjects = loadDatabase("app.projects_sorted")
     print("loaded {} elements".format(len(loadedProjects)))
     print("loaded Projects:")
     printProjects(loadedProjects)
@@ -971,7 +971,7 @@ if __name__ == '__main__':
             print("\t{}".format(item))  # hide duplicates from list
 
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
-        for p in projectsSorted:
+        for p in app.projects_sorted:
             if len(p.rootElements) == 1:
                 print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))
             elif len(p.rootElements) > 1:
@@ -984,7 +984,7 @@ if __name__ == '__main__':
     ## compare timestamps
     print()
     print("{:<15} {:<3} {:<15} {}".format("fileName", " ", "fileSystem\\|/", "p.fileName"))
-    for p in projectsSorted:
+    for p in app.projects_sorted:
         fileNameTimestamp = getTimestampFromFilename(p.fileName)
         # 2015.04.18
 
@@ -1017,11 +1017,11 @@ if __name__ == '__main__':
 
     wait_for_input("start workflow? [yes,no]:")
     gitcmds = list()
-    workflow(projectsSorted, app.system_path_extraction, app.system_path_repo)     #  FIX project order
+    workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     #  FIX project order
 
     for i in gitcmds:
         print(i)
 
-    for p in projectsSorted:
+    for p in app.projects_sorted:
         print(str(p.extractPathRepoBase))
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -5,11 +5,23 @@ class App:
 
     _file_list = list()
 
-    project_list_sorted = list()
+    _project_list_sorted = list()
 
     system_path_rar_files = "R:\\SMW-Test"
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
+
+    @property
+    def projects_sorted(self):
+        return self._project_list_sorted
+
+    @projects_sorted.setter
+    def projects_sorted(self, value):
+        self._project_list_sorted = value
+
+    @projects_sorted.deleter
+    def projects_sorted(self):
+        del self._project_list_sorted
 
     @property
     def projects(self):
