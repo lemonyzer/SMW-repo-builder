@@ -101,23 +101,23 @@ def readRarSpecificDetailsFromSystemPath(project):
     return
 
 
-def workWithFilelist(systemPath):
+def workWithFilelist(system_path_rar_files, project_list, file_list):
 
-    entries = os.listdir(systemPath)
-    global files
-    files = entries.copy()
+    entries = os.listdir(system_path_rar_files)
+    #global file_list
+    file_list = entries.copy()
     for entry in entries:
         if isDirectoryEntryRelevant(entry):
             # projTimestamp = getTimestampFromFilename(entry)
-            projTimestamp = getTimestampFromFilesystem(systemPath + "\\" + entry)
+            projTimestamp = getTimestampFromFilesystem(system_path_rar_files + "\\" + entry)
             projName = getProjectNameFromFilename(entry)
             projInfo = getProjectAdditionalInfoFromFilename(entry)
-            projSystemPath = systemPath + "\\" + entry
+            projSystemPath = system_path_rar_files + "\\" + entry
             currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, entry)
-            projects.append(currentProject)
+            project_list.append(currentProject)
 
     # List all subdirectories using os.listdir
-    basepath = systemPath
+    basepath = system_path_rar_files
     for entry in os.listdir(basepath):
         if os.path.isdir(os.path.join(basepath, entry)):
             print("Checking subdirectory {}...".format(os.path.join(basepath, entry)))
@@ -133,19 +133,19 @@ def workWithFilelist(systemPath):
                     projInfo = getProjectAdditionalInfoFromFilename(subentry)
                     projSystemPath = os.path.join(subdirectory, subentry)
                     currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, subentry)
-                    projects.append(currentProject)
+                    project_list.append(currentProject)
 
     print("{:<30}: {}".format("numberOfFiles", len(entries)))
-    print("{:<30}: {}".format("numberOfProjects", len(projects)))
+    print("{:<30}: {}".format("numberOfProjects", len(project_list)))
 
 
-def showFiles():
-    for e in files:
+def showFiles(file_list):
+    for e in file_list:
         print(e)
 
 
-def showProjects():
-    for p in projects:
+def showProjects(project_list):
+    for p in project_list:
         print()
         p.say_state()
         print()
@@ -786,25 +786,23 @@ if __name__ == '__main__':
     # rem approve all (file) changes
     # rem commit
 
-    print_hi('PyCharm')
-
-    projects = list()
-    files = list()
+    # project_list = list()
+    # files = list()
 
     
     prokectsnew = loadDirectoryList(app.system_path_rar_files)
     printProjects(prokectsnew)
 
-    workWithFilelist(app.system_path_rar_files)
+    workWithFilelist(app.system_path_rar_files, app.projects, app.files)
 
-    # showFiles()
+    # showFiles(app.files)
     # showProjects()
     # print(files[1])  # SuperMarioWars 2014.06.05 UnityNetwork.rar
 
     printRarDetails = False
 
     rootFolders = list()
-    for p in projects:
+    for p in app.projects:
         if rarfile.is_rarfile(p.systemFilePath):
             p.israrfile = True
             rar = rarfile.RarFile(p.systemFilePath)
@@ -849,7 +847,7 @@ if __name__ == '__main__':
             p.israrfile = False
 
     numOfRarFiles = 0
-    for p in projects:
+    for p in app.projects:
         if p.israrfile:
             numOfRarFiles = numOfRarFiles + 1
 
@@ -859,10 +857,10 @@ if __name__ == '__main__':
 
     if showProjects:
         print("projects")
-        printProjects(projects)
+        printProjects(app.projects)
 
     #projects.sort(key=operator.attrgetter('timestamp'))    # inline sorting
-    projectsSorted = sorted(projects, key=operator.attrgetter('timestamp'))  # sort copy
+    projectsSorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
 
     if showProjects:
         print("projects Sorted")
@@ -870,7 +868,7 @@ if __name__ == '__main__':
 
     print("compare projects lists")
     for i in range(len(projectsSorted)):
-        p = projects[i].fileName
+        p = app.projects[i].fileName
         ps = projectsSorted[i].fileName
         compareresult = "not tested"
         if p == ps:
@@ -882,7 +880,7 @@ if __name__ == '__main__':
     waitForInput("check sorted list [yes,no]:")
 
     print("saving database...")
-    saveDatabase(projects, "projects")
+    saveDatabase(app.projects, "projects")
     saveDatabase(projectsSorted, "projectsSorted")
     print("loading database...")
     loadedProjects = loadDatabase("projectsSorted")
