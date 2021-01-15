@@ -664,7 +664,7 @@ def root_elements(rarfile_content_filenamelist):
     return rootelements
 
 
-def loadDatabase(filename):
+def load_database(filename):
     filename = sanitize_filename(filename + ".pickel.json")
     if not os.path.exists(filename):
         pass
@@ -677,7 +677,7 @@ def loadDatabase(filename):
     return None
     
 
-def saveDatabase(data, filename):
+def save_database(data, filename):
     #print("Printing to check how it will look like")
     #print(ProjectEncoder().encode(data))
 
@@ -871,6 +871,7 @@ if __name__ == '__main__':
     # rem approve all (file) changes
     # rem commit
 
+
     ##
     ## read directory
     ##
@@ -899,7 +900,6 @@ if __name__ == '__main__':
     showFiles(app.files)
     wait_for_input("app._project_list_load_via_os, continue?")
 
-    
     ####
     #### read directory: Method A 
     #### Analyze RAR Files (still for Method A)
@@ -912,6 +912,7 @@ if __name__ == '__main__':
     analyze_rar_files(app.projects, rootFolders, printRarDetails=True)
     project_list_stats(app.projects, True)  # app.projects with israrfile set
     wait_for_input("analyze_rar_files(), continue?")
+
 
     ##
     ## sort Projects
@@ -936,54 +937,122 @@ if __name__ == '__main__':
         print("projects Sorted")
         printProjects(app.projects_sorted)
 
-    print("compare projects lists")
-    for i in range(len(app.projects_sorted)):
-        p = app.projects[i].fileName
-        ps = app.projects_sorted[i].fileName
-        compareresult = "not tested"
-        if p == ps:
-            compareresult = "==="
-        else:
-            compareresult = "!!!"
-        print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
 
-    wait_for_input("check sorted list [yes,no]:")
+    ##
+    ## @deprecated use compare timestamps to visually check order and check timestamps source!
+    ## Visual sort check - compare project properties
+    ## * timestamp:
+    ##              extracted from filename 
+    ##              extracted from filesystem (last modified date)
+    ## * order (sorted by filesystem)
+    ##
+    skip_visual_sort_check = True
+    if not skip_visual_sort_check:
+        print("visual compare project_list with project_list_sorted")
+        for i in range(len(app.projects_sorted)):
+            p = app.projects[i].fileName
+            ps = app.projects_sorted[i].fileName
+            compareresult = "not tested"
+            if p == ps:
+                compareresult = " ="
+            else:
+                compareresult = "!!!"
+            print("{:<130} {:<3} {:<130}".format(p, compareresult, ps))
+
+        wait_for_input("check sorted list [yes,no]:")
+
+
+    ##
+    ## save
+    ##
+    ## Format:
+    ## * json (human readable)
+    ## * json.pickle (more complexe object types are possible to serialize)
+    ##
+    ## Objects:
+    ## * app.project_list           --> File: "app.project_list.json"
+    ##                              --> File: "app.project_list.json.pickle"
+    ## * app.project_list_sorted    --> File: "app.project_list_sorted.json"
+    ##                              --> File: "app.project_list_sorted.json.pickle"
+    ##
 
     print("saving database...")
-    saveDatabase(app.projects, "projects")
-    saveDatabase(app.projects_sorted, "app.projects_sorted")
+    save_database(app.projects, "app.projects")
+    save_database(app.projects_sorted, "app.projects_sorted")
+
+
+    ##
+    ## load 
+    ##
+    ## source File:
+    ## * "app.project_list_sorted.json.pickle" 
+    ##
+    ## load @
+    ## app._project_list_loaded
+    ##
+
     print("loading database...")
-    loadedProjects = loadDatabase("app.projects_sorted")
-    print("loaded {} elements".format(len(loadedProjects)))
+    app._project_list_loaded = load_database("app.projects_sorted")
+    print("loaded {} elements".format(len(app._project_list_loaded)))
     print("loaded Projects:")
-    printProjects(loadedProjects)
+    printProjects(app._project_list_loaded)
     wait_for_input("check loaded projects list [yes,no]:")
 
+
+    ##
+    ## show RAR content: root elements
+    ##
+
     showRARArchiveRootFolder = True
-    numOfRarFiles = 0
-    for p in app.projects:
-        if p.israrfile:
-            numOfRarFiles = numOfRarFiles + 1
+    print()
+    print("show RAR content: root elements")
+    
     if showRARArchiveRootFolder:
-        print("{:<30}: {}".format("numOfRarFiles", numOfRarFiles))
-        print("RAR rootFolders")
+        num_of_rar_files = 0
+        for p in app.projects:
+            if p.israrfile:
+                num_of_rar_files = num_of_rar_files + 1
+        print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
+        print()
+
+        print("RAR rootFolders (all projects summarized)")
         for item in set(rootFolders):
             print("\t{}".format(item))  # hide duplicates from list
+        print()
 
+        print("RAR rootFolders by project")
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in app.projects_sorted:
             if len(p.rootElements) == 1:
-                print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))
+                #print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))            # deprecated: p.rarRootFolder
+                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
             elif len(p.rootElements) > 1:
                 print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.rootElements)))
+                i = 0
                 for e in p.getRootElements():
-                    print("{:<130} {:<55}".format("|---------------------------------------------------------------->", e))
+                    i += 1
+                    print("{:<127} [{}] {:<55}".format("|>", i, e))
             else:
                 print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
 
+
+    ##
     ## compare timestamps
+    ## * timestamp:
+    ##              extracted from filename 
+    ##              extracted from filesystem (last modified date)
+    ## * order (sorted by filesystem)
+    ##
     print()
-    print("{:<15} {:<3} {:<15} {}".format("fileName", " ", "fileSystem\\|/", "p.fileName"))
+    print(" ! IMPORTANT !")
+    print(" ! please check timestamps, especially for !!! marked entries      !")
+    print(" ! if fileName has a wrong nameing scheme, or maybe no date set,   !")
+    print(" ! consider checking rar file content to get the modification date !")
+    print(" ! IMPORTANT !")
+    print("\\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/")
+    print()
+
+    print("{:<25} {:<5} {:<20} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "p.fileName"))
     for p in app.projects_sorted:
         fileNameTimestamp = getTimestampFromFilename(p.fileName)
         # 2015.04.18
@@ -1000,11 +1069,19 @@ if __name__ == '__main__':
 
         compareresult = "NA"
         if fileNameTimestamp == fileSystemTimestamp:
-            compareresult = "==="
+            compareresult = " = "
         else:
             compareresult = "!!!"
-        print("{:<15} {} {:<15} {}".format(fileNameTimestamp, compareresult, fileSystemTimestamp, p.fileName))
+        print("{:<25} {:<5} {:<20} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, p.fileName))
 
+    print()
+    print("/|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\")
+    print(" ! IMPORTANT !")
+    print(" ! please check timestamps, especially for !!! marked entries      !")
+    print(" ! if fileName has a wrong nameing scheme, or maybe no date set,   !")
+    print(" ! consider checking rar file content to get the modification date !")
+    print(" ! IMPORTANT !")
+    print()
     wait_for_input("check timestamps [yes,no]:")
 
     ##

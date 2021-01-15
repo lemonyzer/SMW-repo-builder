@@ -7,6 +7,8 @@ class App:
 
     _project_list_sorted = list()
 
+    _project_list_loaded = list()
+
     system_path_rar_files = "R:\\SMW-Test"
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
