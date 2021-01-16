@@ -112,22 +112,9 @@ def read_rar_specific_details_from_system_path(project):
     if rarfile.is_rarfile(project.systemFilePath):
         project.israrfile = True
         rar = rarfile.RarFile(project.systemFilePath)
-        rootelements = root_elements(rar.namelist())
-        project.setRootElements(rootelements)
+        root_elements = get_root_elements_from_rar_namelist(rar.namelist())
+        project.setRootElements(root_elements)
         
-        # FIX empty rar, rar without containing folder
-        # TODO renaming rootFolderInRARArchive -> first root element
-        if len(rar.namelist()) > 0: 
-            first_element_names = rar.namelist()[0].split("\\")
-            if len(first_element_names) > 0:
-                rootFolderInRARArchive = first_element_names[0]         # TODO wrong! could exist more than one root Element -> use rootelements instead!
-                                                                        # TODO wrong, could be less than one root elment (empty rar File)!
-            else:
-                rootFolderInRARArchive = None
-        else:
-            rootFolderInRARArchive = None
-
-        project.rarRootFolder = rootFolderInRARArchive
         #global_root_folders.append(rootFolderInRARArchive)
     else:
         project.israrfile = False
@@ -731,12 +718,12 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
         remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
 
-def root_elements(rarfile_content_filenamelist):
+def get_root_elements_from_rar_namelist(rarfile_content_filenamelist):
     # analyze the rarfile.filenames() list to find all root elements (files and folders)
-    rootelements = set()
+    root_elements = set()
     for item in rarfile_content_filenamelist:
-        rootelements.add(item.split("\\")[0])
-    return rootelements
+        root_elements.add(item.split("\\")[0])
+    return root_elements
 
 
 def load_database(filename):
@@ -866,13 +853,13 @@ def command_line_interface():
 ##  * checks if item is a rar-File, marks israrfile True/False
 ##  * loops over all rar Files
 ##  *   optional: prints rar file content (some filters activated)
-##  *   analyses and saves all root_elements() for each rar file in project.rootElements set/list
+##  *   analyses and saves all get_root_elements_from_rar_namelist() for each rar file in project.rootElements set/list
 ##  *   saves all root_elements in global_rar_root_elements (sumarization of all rar files)
 ##  *   prints root_elements
 ##  *   analyses rootDirectory @depricated !!!! BUG
 ##  *     prints available rar.getinfo() of rootDirectory
 ##
-def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=False, printRarRootDirectoryDetails=False):
+def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=False, print_rarinfo_properties_of_first_element_in_rar=False):
     for p in project_list:
         if rarfile.is_rarfile(p.systemFilePath):
             # is RAR File...
@@ -892,39 +879,24 @@ def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=
                 print("{:<30}: contains {} elements; {}".format("rar.namelist()", len(rar.namelist()), "filtered: *"))
 
             #print(rar.printdir())
-            rootelements = root_elements(rar.namelist())
-            p.setRootElements(rootelements)
-            print("{:<30}: {}".format("rootelements", len(p.getRootElements())))
+            root_elements = get_root_elements_from_rar_namelist(rar.namelist())
+            p.setRootElements(root_elements)
+            print("{:<30}: {}".format("root_elements", len(p.getRootElements())))
             for el in p.getRootElements():
                 print("{:<30}: {}".format("", el))
 
-            # BUG: more or less than one root element possible! @deprecated! 
-            # FIX empty rar, rar without containing folder
-            # TODO renaming rootFolderInRARArchive -> first root element
-            if len(rar.namelist()) > 0: 
-                first_element_names = rar.namelist()[0].split("\\")
-                if len(first_element_names) > 0:
-                    rootFolderInRARArchive = first_element_names[0]         # could exist more than one root Element -> use rootelements instead!
-                                                                            # could be less than one root elment (empty rar File)!
-                else:
-                    rootFolderInRARArchive = None
-            else:
-                rootFolderInRARArchive = None
-
-            # BUG: FIXED
+            # first_element_in_rar
             if len(rar.namelist()) > 0:
-                print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
+                first_element_in_rar = rar.namelist()[0]
+                print("{:<30}: {}".format("rar.namelist()[0]", first_element_in_rar))
+                if print_rarinfo_properties_of_first_element_in_rar:
+                    print_rar_getinfo_properies(rar, first_element_in_rar)
             else:
                 print("{:<30}: {}".format("rar.namelist()[0]", None))
 
-            print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
-            #test = rarfile.RarInfo()
-            if printRarRootDirectoryDetails:
-                print_rar_getinfo_properies(rar, rootFolderInRARArchive)
-            #print(rar.infolist())
             print()
-            p.rarRootFolder = rootFolderInRARArchive
-            global_rar_root_elements.append(rootFolderInRARArchive)
+            
+            global_rar_root_elements.extend(root_elements)
         else:
             # p is not a RAR File!
             #print(p.systemFilePath + " is not a RAR-File!")
@@ -1119,7 +1091,6 @@ def main_visual_check_rar_root_elements():
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in projects:
             if len(p.rootElements) == 1:
-                #print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))            # deprecated: p.rarRootFolder
                 print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
             elif len(p.rootElements) > 1:
                 print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.rootElements)))

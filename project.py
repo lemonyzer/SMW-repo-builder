@@ -12,26 +12,10 @@ class Project:
         self.fileName = fileName
 
         self.israrfile = False
-        self._rarRootFolder = ""         # TODO CAUTION! wrong! could exist more than on root Element -> use rootElements instead!
         self.rootElements = set()
         self.extractPath = ""
         self.extractPathRepoBase = ""
         self.rfc2822 = ""
-
-    @property
-    @deprecation.deprecated("please, use rootElements!")
-    def rarRootFolder(self):
-        return self._rarRootFolder
-
-    @rarRootFolder.setter
-    @deprecation.deprecated("please, use rootElements!")
-    def rarRootFolder(self, value):
-        self._rarRootFolder = value
-
-    @rarRootFolder.deleter
-    @deprecation.deprecated("please, use rootElements!")
-    def rarRootFolder(self):
-        del self._rarRootFolder
 
     def setRootElements(self, newSet):
         self.rootElements = newSet
