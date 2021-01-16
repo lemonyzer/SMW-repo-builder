@@ -252,12 +252,13 @@ def getProjectAdditionalInfoFromFilename(fileName):
 
 
 def printProjects(list):
+    print("{:<18} - {:<31} - {:<24} - {:<120} - {}".format("timestamp", "rfc2822", "local_time", "fileName", "numOf rootElements"))
     for p in list:
         timestamp = p.timestamp
         local_time = time.ctime(timestamp)
         rfc2822 = formatdate(timestamp, True)
         p.rfc2822 = rfc2822
-        print("{:<18} - {} - {} - {}".format(timestamp, rfc2822, local_time, p.fileName))
+        print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.fileName, len(p.rootElements)))
 
 
 def gitInitRepo(repoSystemPath):
