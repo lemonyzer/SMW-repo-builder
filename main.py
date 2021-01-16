@@ -961,6 +961,9 @@ if __name__ == '__main__':
     print()
     project_list_stats(app._project_list_load_via_pathlib, True)
     wait_for_input("app._project_list_load_via_pathlib, continue?")
+    test_global_root_folders2 = list()
+    analyze_rar_files(app._project_list_load_via_pathlib, test_global_root_folders2, print_rar_content=False)
+    wait_for_input("analyze_rar_files(), continue?")
 
     ###
     ### read directory: Method A (os, recursive, limitation deepness = 2!!!) - use Method B: load_directory_list() instead!
@@ -1079,14 +1082,14 @@ if __name__ == '__main__':
     ##
     ## show RAR content: root elements
     ##
-
+    projects = app._project_list_loaded
     showRARArchiveRootFolder = True
     print()
     print("show RAR content: root elements")
     
     if showRARArchiveRootFolder:
         num_of_rar_files = 0
-        for p in app.projects:
+        for p in projects:
             if p.israrfile:
                 num_of_rar_files = num_of_rar_files + 1
         print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
@@ -1099,7 +1102,7 @@ if __name__ == '__main__':
 
         print("RAR root elements folders/files by project")
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
-        for p in app.projects_sorted:
+        for p in projects:
             if len(p.rootElements) == 1:
                 #print("{:<130} {:<55} {}".format(p.fileName, p.rarRootFolder, len(p.rootElements)))            # deprecated: p.rarRootFolder
                 print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
@@ -1120,6 +1123,7 @@ if __name__ == '__main__':
     ##              extracted from filesystem (last modified date)
     ## * order (sorted by filesystem)
     ##
+    projects = app._project_list_loaded
     print()
     print(" ! IMPORTANT !")
     print(" ! please check timestamps, especially for !!! marked entries      !")
@@ -1130,7 +1134,7 @@ if __name__ == '__main__':
     print()
 
     print("{:<25} {:<5} {:<20} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "p.fileName"))
-    for p in app.projects_sorted:
+    for p in projects:
         fileNameTimestamp = getTimestampFromFilename(p.fileName)
         # 2015.04.18
 
@@ -1161,21 +1165,23 @@ if __name__ == '__main__':
     print()
     wait_for_input("check timestamps [yes,no]:")
 
+
     ##
     ##  Workflow
-    #       RAR Extraction
-    #       File Moving
-    #       git adding
-    #       git commiting
+    ##       RAR Extraction
+    ##       File Moving
+    ##       git adding
+    ##       git commiting
     ##
+    projects = app._project_list_loaded
 
     wait_for_input("start workflow? [yes,no]:")
     gitcmds = list()
-    workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     #  FIX project order
+    workflow(projects, app.system_path_extraction, app.system_path_repo)     
 
     for i in gitcmds:
         print(i)
 
-    for p in app.projects_sorted:
+    for p in projects:
         print(str(p.extractPathRepoBase))
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
