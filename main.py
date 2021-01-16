@@ -786,8 +786,8 @@ def command_line_interface():
             pass
 
 
-def analyze_rar_files(projects, rootFolders, printRarDetails=False):
-    for p in app.projects:
+def analyze_rar_files(project_list, rootFolders, printRarDetails=False):
+    for p in project_list:
         if rarfile.is_rarfile(p.systemFilePath):
             p.israrfile = True
             rar = rarfile.RarFile(p.systemFilePath)
