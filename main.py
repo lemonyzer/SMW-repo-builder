@@ -303,17 +303,17 @@ def printProjects(list):
         print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.fileName, len(p.rootElements)))
 
 
-def gitInitRepo(repoSystemPath):
-    repo = Repo.init(repoSystemPath)
+def gitInitRepo(repo_system_path):
+    repo = Repo.init(repo_system_path)
 
     gitCommand("git init")
     sysCommand("copy .gitignore")   #  TODO .gitignore
     src = os.getcwd() + "\\Unity.gitignore"
-    dst = repoSystemPath + "\\.gitignore"
+    dst = repo_system_path + "\\.gitignore"
     shutil.copy(src, dst)
 
-    gitCommand("git add - a")
-    gitCommand("git commit")
+    # gitCommand("git add - a")
+    # gitCommand("git commit")
 
     return repo
 
@@ -326,20 +326,19 @@ def sysCommand(cmd):
     print(cmd)
 
 
-def removeAllProjectFilesFromRepo(repoSystemPath):
+def remove_all_project_files_from_repo(repo_system_path):
     # keep
     #.git
     #.gitignore
-    sysCommand("rm {} -r -e:.git .gitignore".format(repoSystemPath))
+    sysCommand("rm {} -r -e:.git .gitignore".format(repo_system_path))
 
     exclusions = [".git", ".gitignore"]
     print(f'exclusions: {exclusions}')
-    removeRecursive(repoSystemPath, exclusions)
+    remove_recursive(repo_system_path, exclusions)
 
 
-def removeRecursive(repoSystemPath, exclusions):
-
-    repo = Path(repoSystemPath)
+def remove_recursive(element_system_path, exclusions):
+    repo = Path(element_system_path)
     for entry in repo.iterdir():
 
         if entry.name in exclusions:
@@ -349,7 +348,7 @@ def removeRecursive(repoSystemPath, exclusions):
         else:
             if entry.is_dir():
                 # is_Directory
-                removeRecursive(str(entry), exclusions)
+                remove_recursive(str(entry), exclusions)
                 # print(f'{entry.name}.rmdir()')
                 entry.rmdir()                                       # remove (empty) directory
             else:
@@ -382,15 +381,15 @@ def systemPathExists(systemPath):
     return os.path.isdir(systemPath)
 
 
-def gitRepoExists(repoSystemPath):
+def gitRepoExists(repo_system_path):
     # Option B return repo ... return null if not exists
     # repo = any
     repoExists = False
 
     try:
         # Option B
-        # repo = Repo(repoSystemPath)
-        Repo(repoSystemPath)
+        # repo = Repo(repo_system_path)
+        Repo(repo_system_path)
         repoExists = True
     except NoSuchPathError as exc:
         print(exc)
@@ -400,17 +399,17 @@ def gitRepoExists(repoSystemPath):
     return repoExists
 
 
-def extractProject(proj, extractTargetSystemPath):
+def extract_project(proj, extract_destination_system_path):
     # extract rar-file to targetDir\rar-file-name\
-    projectExtractPath = extractTargetSystemPath + "\\" + proj.fileName
-    projectExtractPath = projectExtractPath[:-4]
-    projectExtractPath = projectExtractPath.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
-    proj.extractPath = projectExtractPath
+    project_extract_path = extract_destination_system_path + "\\" + proj.fileName
+    project_extract_path = project_extract_path[:-4]
+    project_extract_path = project_extract_path.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
+    proj.extractPath = project_extract_path
     rarf = rarfile.RarFile(proj.systemFilePath)
-    filteredMembers = filterUnescessaryFilesFromRar(proj, rarf)
-    print("filteredMembers {} / {}".format(len(filteredMembers), len(rarf.namelist())))
-    rarf.extractall(projectExtractPath, members=filteredMembers)
-    sysCommand("extract {} ------> .... rarf.extractall .... {})".format(proj.systemFilePath, extractTargetSystemPath))
+    filtered_members = filter_unescessary_files_from_rar(proj, rarf)
+    print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
+    rarf.extractall(project_extract_path, members=filtered_members)
+    sysCommand("extract {} ------> .... rarf.extractall .... {})".format(proj.systemFilePath, extract_destination_system_path))
 
 
 def maxLevel(checkLevel, arrayLength):
@@ -424,10 +423,10 @@ def maxLevel(checkLevel, arrayLength):
             return 0
 
 
-def filterUnescessaryFilesFromRar(proj, rarFile):
+def filter_unescessary_files_from_rar(proj, rar_file):
     exclusions = ["Library", "Temp", "Obj", "Build", "Builds", "Logs", "User Settings", ".vs", ".gradle"]
     debug = False
-    #for m in rarFile.namelist():
+    #for m in rar_file.namelist():
     #    print(f'{m}')
 
     checkLevel = 0
@@ -436,7 +435,7 @@ def filterUnescessaryFilesFromRar(proj, rarFile):
         # single root element
         if "Assets" in proj.getRootElements():
             print("Assets is rootElement, no filtering explusions!!!")
-            return rarFile.namelist()
+            return rar_file.namelist()
         else:
             # other rootElement (propably <UnityProjectName>)
             checkLevel = 1
@@ -452,7 +451,7 @@ def filterUnescessaryFilesFromRar(proj, rarFile):
 
     filteredmembers = list()
     excludedmembers = list()
-    for member in rarFile.namelist():
+    for member in rar_file.namelist():
         array = member.split("\\")
 
         basepathOfMember = member.split("\\")[maxLevel(checkLevel, len(array))]  # TODO fix/verify: Option 1 basedir extract with current filter, Option B second baseDir extract without filter. totalcommander to compare both base dir and delete similar files. check diff
@@ -530,11 +529,38 @@ def wait_for_input(message):
             break
 
 
-def workflow(projectList, extractTargetSystemPath, repoSystemPath):
-    # TODO implement extract and git workflow
-    # https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
+def workflow(projectList, extract_destination_system_path, repo_system_path):
+    ##
+    ## workflow
+    ##
+    ## Init:
+    ##  * check if extract destination system path exists
+    ##  * check if repo exists
+    ##  *   if not create it
+    ##  *   if yes, 
+    ##  *           Warn User: repo exists
+    ##  *           Ask User: a) want to overwrite (delete repo and create new one)?
+    ##  *                     b) want to use it (commits will be applied in existing repo)?
+    ##  * 
+    ##
+    ## Loop project_list:
+    ##  1* remove all files and folders in repo system path (except: .git, .gitignore)
+    ##  2* extract project
+    ##  3* cd to extracted project
+    ##  4*   cd to repo root level of extracted project
+    ##  5* move all files and folders to repo system path
+    ##  6* run git commands
+    ##  7*   git add .
+    ##  8*   git commit --allow-empty -m <comment> -m <comment2> -m <comment3> --date rfc2822
+    ##
+    ## Finialize:
+    ##  * remove all project files and folders in repo system path (except: .git, .gitignore)
+    ##
 
-    extractTargetRoot = Path(extractTargetSystemPath)
+    ## git workflow
+    ## https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
+
+    extractTargetRoot = Path(extract_destination_system_path)
     # check if folder exists, if not try to create it
     if not extractTargetRoot.exists():
         try:
@@ -555,23 +581,23 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
     repoExisted = False
 
     try:
-        repo = Repo(repoSystemPath)
+        repo = Repo(repo_system_path)
         repoExisted = True
     except NoSuchPathError as exc:
         print(exc)
     except InvalidGitRepositoryError as exc:
         print(exc)
 
-    repoPath = Path(repoSystemPath)
+    repoPath = Path(repo_system_path)
     if not repoPath.exists():
         repoExisted = False
         repoPath.mkdir(parents=True)
 
     if not repoExisted:                         # TODO gitRepoExists
         print("repo didn't exists, create folder and init repo ...")
-        repo = gitInitRepo(repoSystemPath)             # TODO gitInitRepo
+        repo = gitInitRepo(repo_system_path)             # TODO gitInitRepo
 
-    if not Path(repoSystemPath + "\\.gitignore").exists():
+    if not Path(repo_system_path + "\\.gitignore").exists():
         message = "no .gitingore file found, continue? [yes/No]:"
         wait_for_input(message)
 
@@ -586,10 +612,10 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
             ## wait_for_input("continue? [yes/No]:")
             ## clean up
-            removeAllProjectFilesFromRepo(repoSystemPath)  # delete previous project files
+            remove_all_project_files_from_repo(repo_system_path)  # delete previous project files
 
-            extractProject(p, extractTargetSystemPath)  # /projects/<rar-filename>/
-            ## extractTargetSystemPath
+            extract_project(p, extract_destination_system_path)  # /projects/<rar-filename>/
+            ## extract_destination_system_path
             ##  |
             ##  |-<rar filename of Project 0>
             ##  |    |
@@ -633,7 +659,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
 ##
 
             ## if rarRootFolder
-            #analyseExtractedFolder(p, extractTargetSystemPath)
+            #analyseExtractedFolder(p, extract_destination_system_path)
 
             # normal:
             # cd rarRootFolder
@@ -643,7 +669,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
             sysCommand("cd to extracted project folder")
 
             # TODO join extractTargetRoot.resolve() with p.fileName to reach extractedPath
-            # print(extractTargetSystemPath)
+            # print(extract_destination_system_path)
             # if extractTargetRoot.exists():
             #       print(extractTargetRoot.resolve())
             #       print(str(extractTargetRoot))
@@ -673,11 +699,11 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 # TODO move files to repo
 
                 # Problem: moves complete directory!
-                # shutil.move(str(p.extractPathRepoBase.resolve()), repoSystemPath)
+                # shutil.move(str(p.extractPathRepoBase.resolve()), repo_system_path)
                 # Fix:
                 for entry in p.extractPathRepoBase.iterdir():
                     # print("move " + str(entry))
-                    shutil.move(str(entry), repoSystemPath)
+                    shutil.move(str(entry), repo_system_path)
 
 
                 gitCommand("git add .")
@@ -696,8 +722,8 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 parts = ['--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
                 gitcmds.append("repo.git.commit " + " ".join(parts))
                 repo.git.commit('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)  # FIX --allow-empty (if rar files don't contain changes!)
-                time.sleep(0.2)
-        removeAllProjectFilesFromRepo(repoSystemPath)  # delete last project extracted files
+                #time.sleep(0.2)
+        remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
 
 def root_elements(rarfile_content_filenamelist):
@@ -915,15 +941,15 @@ def print_rar_getinfo_properies(rar, rar_info_element):
 def project_list_stats(projects, show_non_rar_files=False):
     print("project_list_stats...")
     print("project_list_stats, show non rar files = " + "True" if show_non_rar_files else "False")
-    rarFiles = 0
+    rar_files = 0
     for p in projects:
         if p.israrfile:
-            rarFiles += 1 
+            rar_files += 1 
         else:
             if show_non_rar_files:
                 print(p.systemFilePath)
     print(f'num of projects: {len(projects)}')
-    print(f'num of rar-files: {rarFiles}')
+    print(f'num of rar-files: {rar_files}')
 
 
 def main_read_directory():
