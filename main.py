@@ -980,6 +980,7 @@ if __name__ == '__main__':
     print("saving database...")
     save_database(app.projects, "app.projects")
     save_database(app.projects_sorted, "app.projects_sorted")
+    save_database(app._project_list_load_via_pathlib, "app._project_list_load_via_pathlib")
 
 
     ##
