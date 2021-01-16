@@ -786,19 +786,35 @@ def command_line_interface():
             pass
 
 
-def analyze_rar_files(project_list, rootFolders, printRarDetails=False):
+##
+## analyze_rar_files
+##  * loops over project_list
+##  * checks if item is a rar-File, marks israrfile True/False
+##  * loops over all rar Files
+##  *   optional: prints rar file content (some filters activated)
+##  *   analyses and saves all root_elements() for each rar file in project.rootElements set/list
+##  *   prints root_elements
+##  *   analyses rootDirectory @depricated !!!! BUG
+##  *     prints available rar.getinfo() of rootDirectory
+##
+def analyze_rar_files(project_list, rootFolders, print_rar_content=False, printRarRootDirectoryDetails=False):
     for p in project_list:
         if rarfile.is_rarfile(p.systemFilePath):
+            # is RAR File...
             p.israrfile = True
             rar = rarfile.RarFile(p.systemFilePath)
-            #print(rar.namelist())
+            
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             print("{:<30}: {}".format("p.fileName", p.fileName))
-            if printRarDetails:
-                print("{:<30}: {}".format("rar.namelist()", ""))
+            if print_rar_content:
+                # list RAR content
+                print("{:<30}: contains {} elements; {}".format("rar.namelist()", len(rar.namelist()), "filtered: 'Assets', 'Library'"))
                 for file in rar.namelist():
                     if not "Assets" in file:
                         if not "Library" in file:
                             print("{:<30}: {}".format("", file))
+            else:
+                print("{:<30}: contains {} elements; {}".format("rar.namelist()", len(rar.namelist()), "filtered: *"))
 
             #print(rar.printdir())
             rootelements = root_elements(rar.namelist())
@@ -807,12 +823,13 @@ def analyze_rar_files(project_list, rootFolders, printRarDetails=False):
             for el in p.getRootElements():
                 print("{:<30}: {}".format("", el))
 
+            # BUG: more than one root Folder possible! @deprecated! 
             rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]
 
             print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
             print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
             #test = rarfile.RarInfo()
-            if printRarDetails:
+            if printRarRootDirectoryDetails:
                 print("{:<30}: {}".format("getinfo()", rootFolderInRARArchive))
                 print("{:<30} {:<30}: {}".format("", "date_time", rar.getinfo(rootFolderInRARArchive).date_time))
                 print("{:<30} {:<30}: {}".format("", "filename", rar.getinfo(rootFolderInRARArchive).filename))
@@ -828,7 +845,8 @@ def analyze_rar_files(project_list, rootFolders, printRarDetails=False):
             p.rarRootFolder = rootFolderInRARArchive
             rootFolders.append(rootFolderInRARArchive)
         else:
-            print(p.systemFilePath + " is not a RAR-File!")
+            # p is not a RAR File!
+            #print(p.systemFilePath + " is not a RAR-File!")
             p.israrfile = False
 
 
@@ -910,7 +928,7 @@ if __name__ == '__main__':
     ####
     print("analyze_rar_files...")
     rootFolders = list()
-    analyze_rar_files(app.projects, rootFolders, printRarDetails=True)
+    analyze_rar_files(app.projects, rootFolders, print_rar_content=False)
     project_list_stats(app.projects, True)  # app.projects with israrfile set
     wait_for_input("analyze_rar_files(), continue?")
 
