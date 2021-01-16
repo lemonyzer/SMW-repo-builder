@@ -106,7 +106,7 @@ def read_rar_specific_details_from_system_path(project):
             rootFolderInRARArchive = None
 
         project.rarRootFolder = rootFolderInRARArchive
-        #rootFolders.append(rootFolderInRARArchive)
+        #global_root_folders.append(rootFolderInRARArchive)
     else:
         project.israrfile = False
     print("{:<30}: {}".format(project.systemFilePath, "file" + (" RAR" if project.israrfile else " NOT RAR marked")))   # conditional expression
@@ -814,7 +814,7 @@ def command_line_interface():
 ##  *   analyses rootDirectory @depricated !!!! BUG
 ##  *     prints available rar.getinfo() of rootDirectory
 ##
-def analyze_rar_files(project_list, rootFolders, print_rar_content=False, printRarRootDirectoryDetails=False):
+def analyze_rar_files(project_list, global_root_folders, print_rar_content=False, printRarRootDirectoryDetails=False):
     for p in project_list:
         if rarfile.is_rarfile(p.systemFilePath):
             # is RAR File...
@@ -875,7 +875,7 @@ def analyze_rar_files(project_list, rootFolders, print_rar_content=False, printR
             #print(rar.infolist())
             print()
             p.rarRootFolder = rootFolderInRARArchive
-            rootFolders.append(rootFolderInRARArchive)
+            global_root_folders.append(rootFolderInRARArchive)
         else:
             # p is not a RAR File!
             #print(p.systemFilePath + " is not a RAR-File!")
@@ -959,8 +959,8 @@ if __name__ == '__main__':
     ####                         TODO compare DOING with reading directory: Method B 
     ####
     print("analyze_rar_files...")
-    rootFolders = list()
-    analyze_rar_files(app.projects, rootFolders, print_rar_content=False)
+    global_root_folders = list()
+    analyze_rar_files(app.projects, global_root_folders, print_rar_content=False)
     project_list_stats(app.projects, True)  # app.projects with israrfile set
     wait_for_input("analyze_rar_files(), continue?")
 
@@ -1067,12 +1067,12 @@ if __name__ == '__main__':
         print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
         print()
 
-        print("RAR rootFolders (all projects summarized)")
-        for item in set(rootFolders):
+        print("RAR global_root_folders (all projects summarized)")
+        for item in set(global_root_folders):
             print("\t{}".format(item))  # hide duplicates from list
         print()
 
-        print("RAR rootFolders by project")
+        print("RAR root elements folders/files by project")
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in app.projects_sorted:
             if len(p.rootElements) == 1:
