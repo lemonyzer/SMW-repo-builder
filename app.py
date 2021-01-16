@@ -1,5 +1,7 @@
 class App:
 
+    _main_wait_for_input = False
+
     _project_list_load_via_os = list()
     _project_list_load_via_pathlib = list()
 

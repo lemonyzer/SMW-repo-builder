@@ -520,13 +520,16 @@ def findProjectRepoLevel(projectExtractedPath):
 
 
 def wait_for_input(message):
-    x = ""
-    while x not in ["yes", "YES", "N", "n", "No"]:
-        x = input(message)
-        if x in ["N", "n", "No"]:
-            exit()
-        elif x in ["yes", "YES"]:
-            break
+    if app._main_wait_for_input:
+        x = ""
+        while x not in ["yes", "YES", "N", "n", "No"]:
+            x = input(message)
+            if x in ["N", "n", "No"]:
+                exit()
+            elif x in ["yes", "YES"]:
+                break
+    else:
+        print("AUTO MODE")
 
 
 def workflow(projectList, extract_destination_system_path, repo_system_path):
