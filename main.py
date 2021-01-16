@@ -1232,6 +1232,10 @@ if __name__ == '__main__':
     projects = app._project_list_loaded
 
     wait_for_input("start workflow? [yes,no]:")
+
+    while input("FORCED STOP BEFORE WORKFLOW STARTS (continue with 'y')") != "y":
+        pass
+
     gitcmds = list()
     workflow(projects, app.system_path_extraction, app.system_path_repo)     
 
