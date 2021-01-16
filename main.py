@@ -20,6 +20,7 @@ import jsonpickle
 
 from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip install pathvalidate
 
+import deprecation
 from app import App
 
 # Press Umschalt+F10 to execute it or replace it with your code.
@@ -137,6 +138,7 @@ def read_rar_specific_details_from_system_path(project):
 # workWithFilelist()
 # limitation: reads files max. 2 level deeper than system_path
 # depricated! use load_directory_list - works recursively
+@deprecation.deprecated("use load_directory_list - works recursively without deepness limit!")
 def workWithFilelist(system_path_rar_files, project_list, file_list):
 
     entries = os.listdir(system_path_rar_files)
