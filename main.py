@@ -92,7 +92,19 @@ def read_rar_specific_details_from_system_path(project):
         rar = rarfile.RarFile(project.systemFilePath)
         rootelements = root_elements(rar.namelist())
         project.setRootElements(rootelements)
-        rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]       # TODO wrong! could exist more than on root Element -> use rootelements instead!
+        
+        # FIX empty rar, rar without containing folder
+        # TODO renaming rootFolderInRARArchive -> first root element
+        if len(rar.namelist()) > 0: 
+            first_element_names = rar.namelist()[0].split("\\")
+            if len(first_element_names) > 0:
+                rootFolderInRARArchive = first_element_names[0]         # TODO wrong! could exist more than one root Element -> use rootelements instead!
+                                                                        # TODO wrong, could be less than one root elment (empty rar File)!
+            else:
+                rootFolderInRARArchive = None
+        else:
+            rootFolderInRARArchive = None
+
         project.rarRootFolder = rootFolderInRARArchive
         #rootFolders.append(rootFolderInRARArchive)
     else:
@@ -187,7 +199,12 @@ def getTimestampFromFilename(fileName):
         elif fileName[14] == "_":
             splitChar = fileName[14]
 
-        data = fileName.split(splitChar, 1)
+        # BUG can't splitt with empty separator!
+        # FIX
+        if splitChar == "":
+            data = fileName
+        else:
+            data = fileName.split(splitChar, 1)
         # timestamp format: 10 characters
         ## 123456789T
         ## 2014.08.08
@@ -823,10 +840,25 @@ def analyze_rar_files(project_list, rootFolders, print_rar_content=False, printR
             for el in p.getRootElements():
                 print("{:<30}: {}".format("", el))
 
-            # BUG: more than one root Folder possible! @deprecated! 
-            rootFolderInRARArchive = rar.namelist()[0].split("\\")[0]
+            # BUG: more or less than one root element possible! @deprecated! 
+            # FIX empty rar, rar without containing folder
+            # TODO renaming rootFolderInRARArchive -> first root element
+            if len(rar.namelist()) > 0: 
+                first_element_names = rar.namelist()[0].split("\\")
+                if len(first_element_names) > 0:
+                    rootFolderInRARArchive = first_element_names[0]         # could exist more than one root Element -> use rootelements instead!
+                                                                            # could be less than one root elment (empty rar File)!
+                else:
+                    rootFolderInRARArchive = None
+            else:
+                rootFolderInRARArchive = None
 
-            print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
+            # BUG: FIXED
+            if len(rar.namelist()) > 0:
+                print("{:<30}: {}".format("rar.namelist()[0]", rar.namelist()[0]))
+            else:
+                print("{:<30}: {}".format("rar.namelist()[0]", None))
+
             print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
             #test = rarfile.RarInfo()
             if printRarRootDirectoryDetails:
