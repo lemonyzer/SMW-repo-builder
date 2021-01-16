@@ -38,6 +38,19 @@ def isDirectoryEntryRelevant(entry):
     return False
 
 
+##
+## load_directory_list
+## 
+## param: system_path_rar_files
+## return: project_list (list<Project>)
+##
+## loads and loops/iterates through directory elements
+##  if element is directory
+##    ... -> recursive call (load_directory_list) with current directory as system_path_rar_files 
+##  if element is file
+##    call read_project_details_from_system_path()
+##    append initialized project to project_list
+## 
 def load_directory_list(system_path_rar_files):
     # iterates (recursive) through all files and folders in system_path_rar_files and built projectsList
     # difference between path.absolut() path.resolve()  https://discuss.python.org/t/pathlib-absolute-vs-resolve/2573
@@ -71,15 +84,23 @@ def load_directory_list(system_path_rar_files):
     return project_list
 
 
-def read_project_details_from_system_path(fileSystemPath):
-    filePath = Path(fileSystemPath)
-    # print("read project details from " + str(filePath))
-    # projTimestamp = getTimestampFromFilename(entry)
-    projTimestamp = getTimestampFromFilesystem(str(filePath))
-    projName = getProjectNameFromFilename(filePath.name)
-    projInfo = getProjectAdditionalInfoFromFilename(filePath.name)
-    projSystemPath = str(filePath)
-    currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, filePath.name)
+##
+## read_project_details_from_system_path
+##
+## parameter: 
+##   * file_system_path: any File Path (not only rar-Files) 
+##
+## return: Project Object
+##
+def read_project_details_from_system_path(file_system_path):
+    file_path = Path(file_system_path)
+    # print("read project details from " + str(file_path))
+    # proj_timestamp = getTimestampFromFilename(entry)
+    proj_timestamp = getTimestampFromFilesystem(str(file_path))
+    proj_name = getProjectNameFromFilename(file_path.name)
+    proj_info = getProjectAdditionalInfoFromFilename(file_path.name)
+    proj_system_path = str(file_path)
+    currentProject = Project(proj_timestamp, proj_name, proj_info, proj_system_path, file_path.name)
 
     read_rar_specific_details_from_system_path(currentProject)
     return currentProject
@@ -255,6 +276,10 @@ def getTimestampFromFilesystem(fileName):
 
 
 def getProjectNameFromFilename(fileName):
+    # TODO: check naming schema for all projects
+    #                    \|/
+    #       SuperMariaWars 2021.01.16 Description.rar
+    #       SuperMariaWars_2021.01.17 Description.rar
     # split string with " ", 1 time => list with 2 itmes
     data = fileName.split(" ", 1)
     return data[0]
