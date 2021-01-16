@@ -699,6 +699,7 @@ def workflow(projectList, extractTargetSystemPath, repoSystemPath):
                 time.sleep(0.2)
         removeAllProjectFilesFromRepo(repoSystemPath)  # delete last project extracted files
 
+
 def root_elements(rarfile_content_filenamelist):
     # analyze the rarfile.filenames() list to find all root elements (files and folders)
     rootelements = set()
@@ -835,11 +836,12 @@ def command_line_interface():
 ##  * loops over all rar Files
 ##  *   optional: prints rar file content (some filters activated)
 ##  *   analyses and saves all root_elements() for each rar file in project.rootElements set/list
+##  *   saves all root_elements in global_rar_root_elements (sumarization of all rar files)
 ##  *   prints root_elements
 ##  *   analyses rootDirectory @depricated !!!! BUG
 ##  *     prints available rar.getinfo() of rootDirectory
 ##
-def analyze_rar_files(project_list, global_root_folders, print_rar_content=False, printRarRootDirectoryDetails=False):
+def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=False, printRarRootDirectoryDetails=False):
     for p in project_list:
         if rarfile.is_rarfile(p.systemFilePath):
             # is RAR File...
@@ -887,25 +889,27 @@ def analyze_rar_files(project_list, global_root_folders, print_rar_content=False
             print("{:<30}: {}".format("rootFolderInRARArchive", rootFolderInRARArchive))
             #test = rarfile.RarInfo()
             if printRarRootDirectoryDetails:
-                print("{:<30}: {}".format("getinfo()", rootFolderInRARArchive))
-                print("{:<30} {:<30}: {}".format("", "date_time", rar.getinfo(rootFolderInRARArchive).date_time))
-                print("{:<30} {:<30}: {}".format("", "filename", rar.getinfo(rootFolderInRARArchive).filename))
-                #print("{:<30} {:<30}: {}".format("", "compress_type", rar.getinfo(rootFolderInRARArchive).compress_type))
-                print("{:<30} {:<30}: {}".format("", "comment", rar.getinfo(rootFolderInRARArchive).comment))
-                print("{:<30} {:<30}: {}".format("", "create_system", rar.getinfo(rootFolderInRARArchive).create_system))
-                print("{:<30} {:<30}: {}".format("", "extract_version", rar.getinfo(rootFolderInRARArchive).extract_version))
-                print("{:<30} {:<30}: {}".format("", "flag_bits", rar.getinfo(rootFolderInRARArchive).flag_bits))
-                print("{:<30} {:<30}: {}".format("", "CRC", rar.getinfo(rootFolderInRARArchive).CRC))
-                print("{:<30} {:<30}: {}".format("", "rar.getinfo(rootFolderInRARArchive)", rar.getinfo(rootFolderInRARArchive)))
+                print_rar_getinfo_properies(rar, rootFolderInRARArchive)
             #print(rar.infolist())
             print()
             p.rarRootFolder = rootFolderInRARArchive
-            global_root_folders.append(rootFolderInRARArchive)
+            global_rar_root_elements.append(rootFolderInRARArchive)
         else:
             # p is not a RAR File!
             #print(p.systemFilePath + " is not a RAR-File!")
             p.israrfile = False
 
+def print_rar_getinfo_properies(rar, rar_info_element):
+    print("{:<30}: {}".format("getinfo()", rar_info_element))
+    print("{:<30} {:<30}: {}".format("", "date_time", rar.getinfo(rar_info_element).date_time))
+    print("{:<30} {:<30}: {}".format("", "filename", rar.getinfo(rar_info_element).filename))
+    #print("{:<30} {:<30}: {}".format("", "compress_type", rar.getinfo(rar_info_element).compress_type))
+    print("{:<30} {:<30}: {}".format("", "comment", rar.getinfo(rar_info_element).comment))
+    print("{:<30} {:<30}: {}".format("", "create_system", rar.getinfo(rar_info_element).create_system))
+    print("{:<30} {:<30}: {}".format("", "extract_version", rar.getinfo(rar_info_element).extract_version))
+    print("{:<30} {:<30}: {}".format("", "flag_bits", rar.getinfo(rar_info_element).flag_bits))
+    print("{:<30} {:<30}: {}".format("", "CRC", rar.getinfo(rar_info_element).CRC))
+    print("{:<30} {:<30}: {}".format("", "rar.getinfo(rar_info_element)", rar.getinfo(rar_info_element)))
 
 
 def project_list_stats(projects, show_non_rar_files=False):
@@ -922,32 +926,7 @@ def project_list_stats(projects, show_non_rar_files=False):
     print(f'num of rar-files: {rarFiles}')
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-
-    app = App()
-    app.system_path_rar_files
-    app.system_path_repo
-    app.system_path_extraction
-
-    # command_line_interface()
-
-    # @echo off
-    # rem get files (ordered)
-    # rem extract date and commit details
-
-    # rem (optional) cronical History
-    # rem Option A: change system time
-    # rem Option B: git parameter
-
-    # rem integrate next commit
-    # rem remove all project files from git repo
-    # rem extract all project file to repo-folder
-    # rem apply gitignore
-    # rem approve all (file) changes
-    # rem commit
-
-
+def main_read_directory():
     ##
     ## read directory
     ##
@@ -961,8 +940,8 @@ if __name__ == '__main__':
     print()
     project_list_stats(app._project_list_load_via_pathlib, True)
     wait_for_input("app._project_list_load_via_pathlib, continue?")
-    test_global_root_folders2 = list()
-    analyze_rar_files(app._project_list_load_via_pathlib, test_global_root_folders2, print_rar_content=False)
+    test_global_rar_root_elements2 = list()
+    analyze_rar_files(app._project_list_load_via_pathlib, test_global_rar_root_elements2, print_rar_content=False)
     wait_for_input("analyze_rar_files(), continue?")
 
     ###
@@ -987,12 +966,13 @@ if __name__ == '__main__':
     ####                         TODO compare DOING with reading directory: Method B 
     ####
     print("analyze_rar_files...")
-    global_root_folders = list()
-    analyze_rar_files(app.projects, global_root_folders, print_rar_content=False)
+    
+    analyze_rar_files(app.projects, app._global_rar_root_elements, print_rar_content=False)
     project_list_stats(app.projects, True)  # app.projects with israrfile set
     wait_for_input("analyze_rar_files(), continue?")
+    
 
-
+def main_sort():
     ##
     ## sort Projects
     ##
@@ -1011,12 +991,13 @@ if __name__ == '__main__':
     ### sort Projects: Method B (sort copy)
     ###
     app.projects_sorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
-
+    
     if sort_show_projects:
         print("projects Sorted")
         printProjects(app.projects_sorted)
 
 
+def main_visual_sort_check():
     ##
     ## @deprecated use compare timestamps to visually check order and check timestamps source!
     ## Visual sort check - compare project properties
@@ -1041,6 +1022,7 @@ if __name__ == '__main__':
         wait_for_input("check sorted list [yes,no]:")
 
 
+def main_save():
     ##
     ## save
     ##
@@ -1061,6 +1043,7 @@ if __name__ == '__main__':
     save_database(app._project_list_load_via_pathlib, "app._project_list_load_via_pathlib")
 
 
+def main_load():
     ##
     ## load 
     ##
@@ -1079,6 +1062,7 @@ if __name__ == '__main__':
     wait_for_input("check loaded projects list [yes,no]:")
 
 
+def main_visual_check_rar_root_elements():
     ##
     ## show RAR content: root elements
     ##
@@ -1095,8 +1079,8 @@ if __name__ == '__main__':
         print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
         print()
 
-        print("RAR global_root_folders (all projects summarized)")
-        for item in set(global_root_folders):
+        print("RAR global_rar_root_elements (all projects summarized)")
+        for item in set(app._global_rar_root_elements):
             print("\t{}".format(item))  # hide duplicates from list
         print()
 
@@ -1115,7 +1099,10 @@ if __name__ == '__main__':
             else:
                 print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
 
+    wait_for_input("check root elements [yes,no]:")
 
+
+def main_visual_check_compare_sort_and_timestamps():
     ##
     ## compare timestamps
     ## * timestamp:
@@ -1165,6 +1152,73 @@ if __name__ == '__main__':
     print()
     wait_for_input("check timestamps [yes,no]:")
 
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+
+    app = App()
+    app.system_path_rar_files
+    app.system_path_repo
+    app.system_path_extraction
+
+    # command_line_interface()
+
+    # @echo off
+    # rem get files (ordered)
+    # rem extract date and commit details
+
+    # rem (optional) cronical History
+    # rem Option A: change system time
+    # rem Option B: git parameter
+
+    # rem integrate next commit
+    # rem remove all project files from git repo
+    # rem extract all project file to repo-folder
+    # rem apply gitignore
+    # rem approve all (file) changes
+    # rem commit
+
+    ##
+    ## read directory
+    ##
+    main_read_directory()
+    
+
+    ##
+    ## sort Projects
+    ##
+    main_sort()
+
+
+    # deprecated 
+    # main_visual_sort_check()
+
+
+    ##
+    ## save
+    ##
+    main_save()
+    
+
+    ##
+    ## load
+    ##
+    main_load()
+
+
+    ##
+    ## show RAR content: root elements
+    ##
+    main_visual_check_rar_root_elements()
+
+    ##
+    ## compare timestamps
+    ## * timestamp:
+    ##              extracted from filename 
+    ##              extracted from filesystem (last modified date)
+    ## * order (sorted by filesystem)
+    ##
+    main_visual_check_compare_sort_and_timestamps()
+
 
     ##
     ##  Workflow
@@ -1184,4 +1238,3 @@ if __name__ == '__main__':
 
     for p in projects:
         print(str(p.extractPathRepoBase))
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

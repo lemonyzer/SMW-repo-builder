@@ -9,6 +9,8 @@ class App:
 
     _project_list_loaded = list()
 
+    _global_rar_root_elements = list()
+
     system_path_rar_files = "R:\\SMW-Test"
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
