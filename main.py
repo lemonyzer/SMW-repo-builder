@@ -115,6 +115,7 @@ def read_rar_specific_details_from_system_path(project):
         root_elements = get_root_elements_from_rar_namelist(rar.namelist())
         project.setRootElements(root_elements)
         
+        # TODO: append / extend ...
         #global_root_folders.append(rootFolderInRARArchive)
     else:
         project.israrfile = False
@@ -223,6 +224,38 @@ def get_timestamp_from_filename(fileName):
         if len(data) > 1:
             return data[1][0:10]
     return "0000.00.00"
+
+def get_timestamp_from_rar_root_elements(project):
+    rar = rarfile.RarFile(project.systemFilePath)
+    
+    root_elements = project.getRootElements()
+    string_list = []
+    for e in root_elements:
+        # https://www.saltycrane.com/blog/2008/11/python-datetime-time-conversions/
+        # Example:
+        # datetime object to string
+        # dt_obj = datetime(2008, 11, 10, 17, 53, 59)
+        # date_str = dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+        #
+        # Example:
+        # time tuple to datetime object
+        # time_tuple = (2008, 11, 12, 13, 51, 18, 2, 317, 0)
+        # dt_obj = datetime(*time_tuple[0:6])
+        # print repr(dt_obj) 
+
+        # time tipe --> datetime object --> string       
+        time_tuple = rar.getinfo(e).date_time
+        dt_obj = datetime.datetime(*time_tuple[0:5])
+        date_str = dt_obj.strftime("%Y.%m.%d %H:%M")
+        string_list.append(f"{date_str}; {rar.getinfo(e).filename}")
+
+    return string_list
+
+def get_newest_timestamp_from_rar_elements(project):
+    # TODO:
+    # finds latest modified file
+    # returns date + time (+ filename?)
+    pass
 
 
 def modified_date(path_to_file):
@@ -1124,7 +1157,7 @@ def main_visual_check_compare_sort_and_timestamps():
     print("\\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/")
     print()
 
-    print("{:<25} {:<5} {:<20} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "p.fileName"))
+    print("{:<25} {:<5} {:<20} {:<82} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "Date from RARInfo of RAR root elements", "p.fileName"))
     for p in projects:
         fileNameTimestamp = get_timestamp_from_filename(p.fileName)
         # 2015.04.18
@@ -1144,7 +1177,14 @@ def main_visual_check_compare_sort_and_timestamps():
             compareresult = " = "
         else:
             compareresult = "!!!"
-        print("{:<25} {:<5} {:<20} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, p.fileName))
+        print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, "", p.fileName))
+
+        for timestamp_with_element_name in get_timestamp_from_rar_root_elements(p):
+            print("{:<25} {:<5} {:<20} |-{:<80} {}".format( "", "", "", timestamp_with_element_name, "" ))
+
+        #print("{:<25} {:<5} {:<20} / {:<80} {}".format("", "", "", "", "" ))
+        print()
+
 
     print()
     print("/|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\ /|\\")
