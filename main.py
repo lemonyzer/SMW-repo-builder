@@ -1143,8 +1143,10 @@ def main_visual_check_compare_sort_and_timestamps():
     ##
     ## compare timestamps
     ## * timestamp:
-    ##              extracted from filename 
     ##              extracted from filesystem (last modified date)
+    ##              extracted from filename 
+    ##              extracted from rar root elements
+    ##              TODO: display last modified file from rar content
     ## * order (sorted by filesystem)
     ##
     projects = app._project_list_loaded
@@ -1256,10 +1258,6 @@ if __name__ == '__main__':
 
     ##
     ## compare timestamps
-    ## * timestamp:
-    ##              extracted from filename 
-    ##              extracted from filesystem (last modified date)
-    ## * order (sorted by filesystem)
     ##
     main_visual_check_compare_sort_and_timestamps()
 
