@@ -245,8 +245,8 @@ def get_timestamp_from_rar_root_elements(project):
 
         # time tipe --> datetime object --> string       
         time_tuple = rar.getinfo(e).date_time
-        dt_obj = datetime.datetime(*time_tuple[0:5])
-        date_str = dt_obj.strftime("%Y.%m.%d %H:%M")
+        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
+        date_str = dt_obj.strftime("%Y.%m.%d")
         string_list.append(f"{date_str}; {rar.getinfo(e).filename}")
 
     return string_list
