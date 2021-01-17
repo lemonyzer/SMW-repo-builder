@@ -96,7 +96,7 @@ def load_directory_list(system_path_rar_files):
 def read_project_details_from_system_path(file_system_path):
     file_path = Path(file_system_path)
     # print("read project details from " + str(file_path))
-    # proj_timestamp = getTimestampFromFilename(entry)
+    # proj_timestamp = get_timestamp_from_filename(entry)
     proj_timestamp = getTimestampFromFilesystem(str(file_path))
     proj_name = getProjectNameFromFilename(file_path.name)
     proj_info = getProjectAdditionalInfoFromFilename(file_path.name)
@@ -137,7 +137,7 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
         #    file_list.append(entry)
         print("Checking entry (Level 0) {}...".format(os.path.join(system_path_rar_files, entry)))
         if isDirectoryEntryRelevant(entry):
-            # projTimestamp = getTimestampFromFilename(entry)
+            # projTimestamp = get_timestamp_from_filename(entry)
             projTimestamp = getTimestampFromFilesystem(system_path_rar_files + "\\" + entry)
             projName = getProjectNameFromFilename(entry)
             projInfo = getProjectAdditionalInfoFromFilename(entry)
@@ -167,7 +167,7 @@ def workWithFilelist(system_path_rar_files, project_list, file_list):
                     file_list.append(subentry)
 
                 if isDirectoryEntryRelevant(subentry):
-                    # projTimestamp = getTimestampFromFilename(entry)
+                    # projTimestamp = get_timestamp_from_filename(entry)
 
                     projTimestamp = getTimestampFromFilesystem(os.path.join(subdirectory, subentry))
                     projName = getProjectNameFromFilename(entry)
@@ -197,11 +197,12 @@ def showProjects(project_list):
         print()
 
 
-def getTimestampFromFilename(fileName):
+def get_timestamp_from_filename(fileName):
     # split string with " ", 1 time => list with 2 itmes
     #123456789012345
     #SuperMarioWars 2014
     #SuperMarioWars_2014
+    #Maps_v15.rar
     if len(fileName) > 15:
         splitChar = ""
         if fileName[14] == " ":
@@ -212,7 +213,8 @@ def getTimestampFromFilename(fileName):
         # BUG can't splitt with empty separator!
         # FIX
         if splitChar == "":
-            data = fileName
+            # different naming schema
+            return "0000.00.00"
         else:
             data = fileName.split(splitChar, 1)
         # timestamp format: 10 characters
@@ -1124,7 +1126,7 @@ def main_visual_check_compare_sort_and_timestamps():
 
     print("{:<25} {:<5} {:<20} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "p.fileName"))
     for p in projects:
-        fileNameTimestamp = getTimestampFromFilename(p.fileName)
+        fileNameTimestamp = get_timestamp_from_filename(p.fileName)
         # 2015.04.18
 
         # p.timestamp -> convert

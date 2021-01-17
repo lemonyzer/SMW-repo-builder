@@ -4,7 +4,7 @@ class Project:
     # SuperMarioWars 2014.06.05 UnityNetwork
     # SuperMarioWars 2015.04.05_2_Unity5_createPrefab_moreGenericWayV3_Works_Next_FullCharacterWithAnims
 
-    def __init__(self, timestamp="1234.12.12", projName="projname", shortDescription="shortDscr", systemFilePath="", fileName=""):
+    def __init__(self, timestamp="0000.00.00", projName="projname", shortDescription="shortDscr", systemFilePath="", fileName=""):
         self.timestamp = timestamp
         self.name = projName
         self.shortDescription = shortDescription
