@@ -1,9 +1,7 @@
 class App:
 
+    _projects = list()
     _main_wait_for_input = False
-
-    _project_list_load_via_os = list()
-    _project_list_load_via_pathlib = list()
 
     _file_list = list()
 
@@ -31,15 +29,15 @@ class App:
 
     @property
     def projects(self):
-        return self._project_list_load_via_os
+        return self._projects
 
     @projects.setter
     def projects(self, value):
-        self._project_list_load_via_os = value
+        self._projects = value
 
     @projects.deleter
     def projects(self):
-        del self._project_list_load_via_os
+        del self._projects
 
     @property
     def files(self):

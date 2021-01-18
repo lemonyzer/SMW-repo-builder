@@ -116,73 +116,12 @@ def read_rar_specific_details_from_system_path(project):
         project.setRootElements(root_elements)
         
         # TODO: append / extend ...
-        #global_root_folders.append(rootFolderInRARArchive)
+        app._global_rar_root_elements.extend(root_elements)
     else:
         project.israrfile = False
     print("{:<30}: {}".format(project.systemFilePath, "file" + (" RAR" if project.israrfile else " NOT RAR marked")))   # conditional expression
     
     return
-
-# workWithFilelist()
-# limitation: reads files max. 2 level deeper than system_path
-# depricated! use load_directory_list - works recursively
-@deprecation.deprecated("use load_directory_list - works recursively without deepness limit!")
-def workWithFilelist(system_path_rar_files, project_list, file_list):
-
-    entries = os.listdir(system_path_rar_files)
-    # file_list.extend(entries)
-
-    # all Files&Folders in root
-    for entry in entries:
-        #if os.path.isfile(os.path.join(system_path_rar_files, entry)):                                 # dublicates! don't remove twice!
-        #    file_list.append(entry)
-        print("Checking entry (Level 0) {}...".format(os.path.join(system_path_rar_files, entry)))
-        if isDirectoryEntryRelevant(entry):
-            # projTimestamp = get_timestamp_from_filename(entry)
-            projTimestamp = getTimestampFromFilesystem(system_path_rar_files + "\\" + entry)
-            projName = getProjectNameFromFilename(entry)
-            projInfo = getProjectAdditionalInfoFromFilename(entry)
-            projSystemPath = system_path_rar_files + "\\" + entry
-            currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, entry)
-            project_list.append(currentProject)
-        else:
-            print("... skipped ...")
-
-    # all Files&Folders in subdirectories of root (direct subdirectories of root, 1 level deeper)
-    # List all subdirectories using os.listdir
-    basepath = system_path_rar_files
-    for entry in os.listdir(basepath):
-        if os.path.isfile(os.path.join(basepath, entry)):
-            file_list.append(entry)
-        # in this loop only files&folder in Level 1
-        print("Checking entry (Level 1) {}...".format(os.path.join(basepath, entry)))
-        if os.path.isdir(os.path.join(basepath, entry)):
-            print("Checking subdirectory (Level 1) {}...".format(os.path.join(basepath, entry)))
-
-            subdirectory = os.path.join(basepath, entry)
-            subentries = os.listdir(subdirectory)
-            # all Files&Folders in subdirectories of subdirectory (2 level deeper)
-            for subentry in subentries:
-                print("Checking subdirectory (Level 2) {}...".format(os.path.join(basepath, subentry)))
-                if os.path.isfile(os.path.join(subdirectory, subentry)):
-                    file_list.append(subentry)
-
-                if isDirectoryEntryRelevant(subentry):
-                    # projTimestamp = get_timestamp_from_filename(entry)
-
-                    projTimestamp = getTimestampFromFilesystem(os.path.join(subdirectory, subentry))
-                    projName = getProjectNameFromFilename(entry)
-                    projInfo = getProjectAdditionalInfoFromFilename(subentry)
-                    projSystemPath = os.path.join(subdirectory, subentry)
-                    currentProject = Project(projTimestamp, projName, projInfo, projSystemPath, subentry)
-                    project_list.append(currentProject)
-                else:
-                    print("... skipped ...")
-        else:
-            print("... skipped ...")
-
-    print("{:<30}: {}".format("number of files & folders (file_list)", len(file_list)))
-    print("{:<30}: {}".format("number of projects (project_list)", len(project_list)))
 
 
 def showFiles(file_list):
@@ -973,41 +912,14 @@ def main_read_directory():
     ### read directory: Method B (pathlib, recursive)
     ###
     print("load_directory_list...")
-    app._project_list_load_via_pathlib = load_directory_list(app.system_path_rar_files)
+    app.projects = load_directory_list(app.system_path_rar_files)
     # printProjects(app._project_list_load_via_pathlib)
     print()
-    project_list_stats(app._project_list_load_via_pathlib, True)
-    wait_for_input("app._project_list_load_via_pathlib, continue?")
-    test_global_rar_root_elements2 = list()
-    analyze_rar_files(app._project_list_load_via_pathlib, test_global_rar_root_elements2, print_rar_content=False)
-    wait_for_input("analyze_rar_files(), continue?")
+    project_list_stats(app.projects, True)
+    wait_for_input("app.projects, continue?")
 
-    ###
-    ### read directory: Method A (os, recursive, limitation deepness = 2!!!) - use Method B: load_directory_list() instead!
-    ###
-    ### app.projects contains matching rar-Files 
-    ### app.files contains ALL files (not only rar-files)
-    ###
-    print("workWithFilelist...")
-    workWithFilelist(app.system_path_rar_files, app.projects, app.files)
-    # printProjects(app.system_path_rar_files)
-    print()
-    #project_list_stats(app.projects, False)                     # CAUTION! workWithFilelist doesn't analyze rar-Files, project.israrfile is False
-    showFiles(app.files)
-    wait_for_input("app._project_list_load_via_os, continue?")
-
-    ####
-    #### read directory: Method A 
-    #### Analyze RAR Files (still for Method A)
-    #### after running this, p in app.projects have p.israrfile is set
-    #### after running this, ... TODO need to check what else analyze_rar_files is doing! (timestamp, ...) 
-    ####                         TODO compare DOING with reading directory: Method B 
-    ####
-    print("analyze_rar_files...")
-    
-    analyze_rar_files(app.projects, app._global_rar_root_elements, print_rar_content=False)
     project_list_stats(app.projects, True)  # app.projects with israrfile set
-    wait_for_input("analyze_rar_files(), continue?")
+    wait_for_input("project_list_stats(), continue?")
     
 
 def main_sort():
@@ -1048,8 +960,8 @@ def main_visual_sort_check():
     if not skip_visual_sort_check:
         print("visual compare project_list with project_list_sorted")
         for i in range(len(app.projects_sorted)):
-            p = app.projects[i].fileName
-            ps = app.projects_sorted[i].fileName
+            p = app.projects[i].fileName                                    # project
+            ps = app.projects_sorted[i].fileName                            # project_sorted
             compareresult = "not tested"
             if p == ps:
                 compareresult = " ="
@@ -1078,7 +990,6 @@ def main_save():
     print("saving database...")
     save_database(app.projects, "app.projects")
     save_database(app.projects_sorted, "app.projects_sorted")
-    save_database(app._project_list_load_via_pathlib, "app._project_list_load_via_pathlib")
 
 
 def main_load():
