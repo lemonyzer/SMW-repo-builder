@@ -154,7 +154,8 @@ def smw_schema_get_info_from_filename(filename, selected_property):
 
     filename_properties = {
         "project_name" : "",
-        "timestamp" : ""
+        "timestamp" : "",
+        "additional_info" : ""
     }
 
     if len(filename) > 15:
@@ -172,8 +173,13 @@ def smw_schema_get_info_from_filename(filename, selected_property):
             # timestamp will not be extracted, instead "0000.00.00" will be used
             filename_properties["project_name"] = filename
             filename_properties["timestamp"] = "0000.00.00"
+            filename_properties["additional_info"] = filename
         else:
-            data = filename.split(splitChar, 1)
+            data = filename.split(splitChar, 1) # split only one time!
+                                                # ideal case:
+                                                # data[0] = project_name
+                                                # data[1] = ####.##.## additional info...
+
 
             # project name extracted (first part of splitted string)
             filename_properties["project_name"] = data[0]
@@ -183,17 +189,24 @@ def smw_schema_get_info_from_filename(filename, selected_property):
                 # timestamp format: 10 characters
                 # 123456789T
                 # 2014.08.08
-                filename_properties["timestamp"] = data[1][0:10]
+                # [start : end : step]
+                # * index starts from 0
+                # * end index is not included
+                filename_properties["timestamp"] = data[1][0:10]        # first 10 characters are the timestamp
+                filename_properties["additional_info"] = data[1][11]    # substring from 11. positon till end is additional info string
             else:
                 # no second existing (splitting resulted in array of size 1)
                 # timestamp will not be extracted, instead "0000.00.00" will be used
                 filename_properties["timestamp"] = "0000.00.00"
+                filename_properties["additional_info"] = filename
+
     else:
         # filename is not long enough, doesn't matches standard smw naming schema!
         # project name will not be extracted, instead full filename will be used
         # timestamp will not be extracted, instead "0000.00.00" will be used
         filename_properties["project_name"] = filename
         filename_properties["timestamp"] = "0000.00.00"
+        filename_properties["additional_info"] = filename
 
     return filename_properties[selected_property]
 
@@ -278,13 +291,8 @@ def get_project_name_from_filename(filename):
     return smw_schema_get_info_from_filename(filename, "project_name")
 
 
-
-def get_project_additional_info_from_filename(file_name):
-    # split string with " ", 1 time => list with 2 itmes
-    data = file_name.split(" ", 1)
-    if len(data) > 1:
-        return data[1][10:]
-    return ""
+def get_project_additional_info_from_filename(filename):
+    return smw_schema_get_info_from_filename(filename, "additional_info")
 
 
 def printProjects(list):
