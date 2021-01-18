@@ -303,7 +303,7 @@ def get_timestamp_from_filesystem(file_name):
 
 
 
-def printProjects(list):
+def print_projects(list):
     print("{:<18} - {:<31} - {:<24} - {:<120} - {}".format("timestamp", "rfc2822", "local_time", "fileName", "numOf root_elements"))
     for p in list:
         timestamp = p.filesystem_timestamp_modified
@@ -312,26 +312,26 @@ def printProjects(list):
         print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.filename, len(p.rar_root_elements)))
 
 
-def gitInitRepo(repo_system_path):
+def git_init_repo(repo_system_path):
     repo = Repo.init(repo_system_path)
 
-    gitCommand("git init")
-    sysCommand("copy .gitignore")   #  TODO .gitignore
+    git_command("git init")
+    sys_command("copy .gitignore")   #  TODO .gitignore
     src = os.getcwd() + "\\Unity.gitignore"
     dst = repo_system_path + "\\.gitignore"
     shutil.copy(src, dst)
 
-    # gitCommand("git add - a")
-    # gitCommand("git commit")
+    # git_command("git add - a")
+    # git_command("git commit")
 
     return repo
 
 
-def gitCommand(cmd):
+def git_command(cmd):
     print(cmd)
 
 
-def sysCommand(cmd):
+def sys_command(cmd):
     print(cmd)
 
 
@@ -339,7 +339,7 @@ def remove_all_project_files_from_repo(repo_system_path):
     # keep
     #.git
     #.gitignore
-    sysCommand("rm {} -r -e:.git .gitignore".format(repo_system_path))
+    sys_command("rm {} -r -e:.git .gitignore".format(repo_system_path))
 
     exclusions = [".git", ".gitignore"]
     print(f'exclusions: {exclusions}')
@@ -370,7 +370,7 @@ def compare_intersect(x, y):
     return frozenset(x).intersection(y)
 
 
-def isRarRootFolderRepoFolder(project):
+def is_rar_root_folder_repo_folder(project):
     # if RootElement is on of the string in valid array, it is the repo Folder and we need to cd "change direction" on path deeper
     valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
 
@@ -385,12 +385,12 @@ def isRarRootFolderRepoFolder(project):
 
 
 def systemPathExists(systemPath):
-    sysCommand(systemPath + "exists? {}".format(os.path.isdir(systemPath)))
+    sys_command(systemPath + "exists? {}".format(os.path.isdir(systemPath)))
     #return os.path.isdir(os.path.join(basepath, entry))
     return os.path.isdir(systemPath)
 
 
-def gitRepoExists(repo_system_path):
+def git_repo_exists(repo_system_path):
     # Option B return repo ... return null if not exists
     # repo = any
     repoExists = False
@@ -410,10 +410,10 @@ def gitRepoExists(repo_system_path):
 
 def extract_project(proj, extract_destination_system_path, use_custom_filter=False):
     # extract rar-file to targetDir\rar-file-name\
-    project_extract_path = extract_destination_system_path + "\\" + proj.fileName
+    project_extract_path = extract_destination_system_path + "\\" + proj.filename
     project_extract_path = project_extract_path[:-4]
     project_extract_path = project_extract_path.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
-    proj.extractPath = project_extract_path
+    proj.extraction_destination = project_extract_path
     rarf = rarfile.RarFile(proj.filesystem_file_path)
     
     if (use_custom_filter):
@@ -423,7 +423,7 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     else:
         rarf.extractall(project_extract_path)
 
-    sysCommand("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.filesystem_file_path, extract_destination_system_path))
+    sys_command("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.filesystem_file_path, extract_destination_system_path))
 
 
 def maxLevel(checkLevel, arrayLength):
@@ -483,14 +483,14 @@ def filter_unescessary_files_from_rar(proj, rar_file):
     return filteredmembers
 
 
-def findProjectRepoLevel(projectExtractedPath):
+def find_project_repo_level(project_extracted_path):
     # TODO find repoLevel in extracted project structure
-    projectExtractedPath = Path(projectExtractedPath)
-    print("findProjectRepoLevel in " + str(projectExtractedPath))
-    #print("findProjectRepoLevel in " + str(projectExtractedPath.resolve()))
-    # print(f'{projectExtractedPath.name} - child elements: {len(projectExtractedPath.iterdir())}')
-    #directoryList = os.listdir(projectExtractedPath.resolve())
-    directoryList = os.listdir(projectExtractedPath)
+    project_extracted_path = Path(project_extracted_path)
+    print("find_project_repo_level in " + str(project_extracted_path))
+    #print("find_project_repo_level in " + str(project_extracted_path.resolve()))
+    # print(f'{project_extracted_path.name} - child elements: {len(project_extracted_path.iterdir())}')
+    #directoryList = os.listdir(project_extracted_path.resolve())
+    directoryList = os.listdir(project_extracted_path)
 
     # if RootElement is on of the string in valid array, we are in the repo Folder
     baseIsFirstLevel = ["Assets"]
@@ -503,13 +503,13 @@ def findProjectRepoLevel(projectExtractedPath):
 
     print(intersectResult)
     if len(intersectResult) >= 1:
-        return projectExtractedPath
+        return project_extracted_path
     else:
 
         intersectResult = compare_intersect(directoryList, baseIsSecondLevel)
         print(intersectResult)
         if len(intersectResult) >= 1:
-            for entry in projectExtractedPath.iterdir():
+            for entry in project_extracted_path.iterdir():
                 # print(str(entry.name))
                 if entry.name in intersectResult:
                     return entry
@@ -521,13 +521,13 @@ def findProjectRepoLevel(projectExtractedPath):
                 #    return entry
             print("no matching found! " + str(intersectResult))
         else:
-            return projectExtractedPath
+            return project_extracted_path
 
-    return projectExtractedPath
-    # for entry in projectExtractedPath.iterdir():
+    return project_extracted_path
+    # for entry in project_extracted_path.iterdir():
     #
     #     if(entry.is_dir())
-    #         findProjectRepoLevel(entry)
+    #         find_project_repo_level(entry)
     #
     #     if
     #     pass
@@ -577,29 +577,29 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
     ## git workflow
     ## https://lemonyzed.atlassian.net/wiki/spaces/SE/pages/105545805/git
 
-    extractTargetRoot = Path(extract_destination_system_path)
+    extract_target_root = Path(extract_destination_system_path)
     # check if folder exists, if not try to create it
-    if not extractTargetRoot.exists():
+    if not extract_target_root.exists():
         try:
-            extractTargetRoot.mkdir(parents=True)
+            extract_target_root.mkdir(parents=True)
         except FileExistsError as exc:
             print(exc)
             exit()
 
     # check if folder is folder, if not exit
-    if not extractTargetRoot.is_dir():
-        print("ERROR: {:<50} ... is not a folder and exists".format(str(extractTargetRoot.resolve())))
+    if not extract_target_root.is_dir():
+        print("ERROR: {:<50} ... is not a folder and exists".format(str(extract_target_root.resolve())))
         exit()
     else:
-        #print("{:<50} ... is folder and exists".format(str(extractTargetRoot.resolve())))
-        print("{:<50} ... is folder and exists".format(str(extractTargetRoot)))
+        #print("{:<50} ... is folder and exists".format(str(extract_target_root.resolve())))
+        print("{:<50} ... is folder and exists".format(str(extract_target_root)))
 
     repo = any
-    repoExisted = False
+    repo_existed = False
 
     try:
         repo = Repo(repo_system_path)
-        repoExisted = True
+        repo_existed = True
     except NoSuchPathError as exc:
         print(exc)
     except InvalidGitRepositoryError as exc:
@@ -607,18 +607,18 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
 
     repoPath = Path(repo_system_path)
     if not repoPath.exists():
-        repoExisted = False
+        repo_existed = False
         repoPath.mkdir(parents=True)
 
-    if not repoExisted:                         # TODO gitRepoExists
+    if not repo_existed:                         # TODO git_repo_exists()
         print("repo didn't exists, create folder and init repo ...")
-        repo = gitInitRepo(repo_system_path)             # TODO gitInitRepo
+        repo = git_init_repo(repo_system_path)             # TODO git_init_repo
 
     if not Path(repo_system_path + "\\.gitignore").exists():
         message = "no .gitingore file found, continue? [yes/No]:"
         wait_for_input(message)
 
-    if extractTargetRoot.exists() and extractTargetRoot.is_dir():
+    if extract_target_root.exists() and extract_target_root.is_dir():
         print()
         print("Starting with workflow of {} projects...".format(len(projectList)))
         i = 0
@@ -683,62 +683,62 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
             # rarRootFolder\* -> repo\*
             # move all files inside rootFolder to repoFolder
 
-            sysCommand("cd to extracted project folder")
+            sys_command("cd to extracted project folder")
 
-            # TODO join extractTargetRoot.resolve() with p.filename to reach extractedPath
+            # TODO join extract_target_root.resolve() with p.filename to reach extractedPath
             # print(extract_destination_system_path)
-            # if extractTargetRoot.exists():
-            #       print(extractTargetRoot.resolve())
-            #       print(str(extractTargetRoot))
+            # if extract_target_root.exists():
+            #       print(extract_target_root.resolve())
+            #       print(str(extract_target_root))
 
-            # extractedProjectSystemPath = str(extractTargetRoot)+"\\"+p.filename
+            # extractedProjectSystemPath = str(extract_target_root)+"\\"+p.filename
             # extractedProjectSystemPath = extractedProjectSystemPath[:-4]   # remove .rar
             # print(extractedProjectSystemPath)
 
-            projectExtractedPath = Path(p.extractPath)
-            print(f'{str(projectExtractedPath)} exists? {projectExtractedPath.exists()}')
+            project_extracted_path = Path(p.extraction_destination)
+            print(f'{str(project_extracted_path)} exists? {project_extracted_path.exists()}')
 
-            if projectExtractedPath.exists():
-                # analyseExtractedPath(projectExtractedPath)
+            if project_extracted_path.exists():
+                # analyseExtractedPath(project_extracted_path)
                 # find root of repo
                 # sub-level for repo
-                projectExtractedPathRepoLevel = findProjectRepoLevel(projectExtractedPath)
-                p.extractPathRepoBase = projectExtractedPathRepoLevel
-                print("--- {:<50} : is repo base dir".format(str(projectExtractedPathRepoLevel)))
+                project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+                p.extraction_destination_respective_repo_root_path = project_extracted_path_repo_level
+                print("--- {:<50} : is repo base dir".format(str(project_extracted_path_repo_level)))
 
 
-                # if isRarRootFolderRepoFolder(p):
-                #     sysCommand("cd to extracted project folder sub directory")
-                #     sysCommand("move all files in cd .\\* to repo folder")
+                # if is_rar_root_folder_repo_folder(p):
+                #     sys_command("cd to extracted project folder sub directory")
+                #     sys_command("move all files in cd .\\* to repo folder")
                 # else:
-                #     sysCommand("move all files in cd .\\* to repo folder")
+                #     sys_command("move all files in cd .\\* to repo folder")
 
                 # TODO move files to repo
 
                 # Problem: moves complete directory!
-                # shutil.move(str(p.extractPathRepoBase.resolve()), repo_system_path)
+                # shutil.move(str(p.extraction_destination_respective_repo_root_path.resolve()), repo_system_path)
                 # Fix:
-                for entry in p.extractPathRepoBase.iterdir():
+                for entry in p.extraction_destination_respective_repo_root_path.iterdir():
                     # print("move " + str(entry))
                     shutil.move(str(entry), repo_system_path)
 
 
-                gitCommand("git add .")
+                git_command("git add .")
                 repo.git.add(A=True)        # same as git add .
                 gitcmds.append("repo.git.add(A=True)")
 
-                #fileSystemTimestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
-                fileSystemTimestamp = p.filesystem_timestamp_modified_rfc2822
+                #filesystem_timestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
+                filesystem_timestamp = p.filesystem_timestamp_modified_rfc2822
 
-                commitTitle = "{}".format(p.filename)  # TODO escape character, convert LF and RETURN to html code?
-                commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
+                commit_title = "{}".format(p.filename)  # TODO escape character, convert LF and RETURN to html code?
+                commit_body = escape(p.long_description())    # TODO escape character, convert LF and RETURN to html code?
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
-                gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
-                print("fileSystemTimestamp = " + fileSystemTimestamp)
-                print('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)
-                parts = ['--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp]
+                git_command("git commit -m '{}' -m '{}' --date='{}' ".format(commit_title, commit_body, filesystem_timestamp))
+                print("filesystem_timestamp = " + filesystem_timestamp)
+                print('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp)
+                parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp]
                 gitcmds.append("repo.git.commit " + " ".join(parts))
-                repo.git.commit('--allow-empty', '-m', f'"{commitTitle}"', '-m', f'"{commitTitle}"', '--date', fileSystemTimestamp)  # FIX --allow-empty (if rar files don't contain changes!)
+                repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp)  # FIX --allow-empty (if rar files don't contain changes!)
                 #time.sleep(0.2)
         remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
@@ -965,7 +965,7 @@ def main_read_directory():
     ###
     print("load_directory_list...")
     app.projects = load_directory_list(app.system_path_rar_files)
-    # printProjects(app._project_list_load_via_pathlib)
+    # print_projects(app._project_list_load_via_pathlib)
     print()
     project_list_stats(app.projects, True)
     wait_for_input("app.projects, continue?")
@@ -979,7 +979,7 @@ def main_sort():
 
     if sort_show_projects:
         print("projects (unsorted)")
-        printProjects(app.projects)
+        print_projects(app.projects)
 
     ###
     ### sort Projects: Method A (inline sorting)
@@ -989,11 +989,11 @@ def main_sort():
     ###
     ### sort Projects: Method B (sort copy)
     ###
-    app.projects_sorted = sorted(app.projects, key=operator.attrgetter('timestamp'))  # sort copy
+    app.projects_sorted = sorted(app.projects, key=operator.attrgetter('filesystem_timestamp_modified'))  # sort copy
     
     if sort_show_projects:
         print("projects Sorted")
-        printProjects(app.projects_sorted)
+        print_projects(app.projects_sorted)
 
 
 def main_visual_sort_check():
@@ -1009,8 +1009,8 @@ def main_visual_sort_check():
     if not skip_visual_sort_check:
         print("visual compare project_list with project_list_sorted")
         for i in range(len(app.projects_sorted)):
-            p = app.projects[i].fileName                                    # project
-            ps = app.projects_sorted[i].fileName                            # project_sorted
+            p = app.projects[i].filename                                    # project
+            ps = app.projects_sorted[i].filename                            # project_sorted
             compareresult = "not tested"
             if p == ps:
                 compareresult = " ="
@@ -1056,7 +1056,7 @@ def main_load():
     app._project_list_loaded = load_database("app.projects_sorted")
     print("loaded {} elements".format(len(app._project_list_loaded)))
     print("loaded Projects:")
-    printProjects(app._project_list_loaded)
+    print_projects(app._project_list_loaded)
     wait_for_input("check loaded projects list [yes,no]:")
 
 
@@ -1126,20 +1126,20 @@ def main_visual_check_compare_sort_and_timestamps():
 
         # p.filesystem_timestamp_modified -> convert
         # CONVERT tutorial: https://timestamp.online/article/how-to-convert-timestamp-to-datetime-in-python
-        ##fileSystemTimestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
+        ##filesystem_timestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
         ## ISO Format
         ## 2020-12-04T10:54:42+01:00
         #dtts = datetime(p.filesystem_timestamp_modified)
         #https://www.programiz.com/python-programming/datetime (Example 5: Get date from a timestamp)
         timestamp = datetime.date.fromtimestamp(p.filesystem_timestamp_modified)
-        fileSystemTimestamp = timestamp.strftime("%Y.%m.%d")
+        filesystem_timestamp = timestamp.strftime("%Y.%m.%d")
 
         compareresult = "NA"
-        if fileNameTimestamp == fileSystemTimestamp:
+        if fileNameTimestamp == filesystem_timestamp:
             compareresult = " = "
         else:
             compareresult = "!!!"
-        print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, "", p.filename))
+        print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(filesystem_timestamp, compareresult, fileNameTimestamp, "", p.filename))
 
         for timestamp_with_element_name in get_timestamp_from_rar_root_elements(p):
             print("{:<25} {:<5} {:<20} |-{:<80} {}".format( "", "", "", timestamp_with_element_name, "" ))
@@ -1243,4 +1243,4 @@ if __name__ == '__main__':
         print(i)
 
     for p in projects:
-        print(str(p.extractPathRepoBase))
+        print(str(p.extraction_destination_respective_repo_root_path))
