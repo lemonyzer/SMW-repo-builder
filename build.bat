@@ -1,6 +1,20 @@
 @echo off
 
-py -m pip install requests unrar gitpython jsonpickle pathvalidate
+REM need pyvenv
+py -m pip install pyvenv
+
+REM prepare virtual python Environment
+py -m venv venv
+
+REM activate virtual environment
+. /venv/Scripts/activate
+start "" venv/Scripts/activate
+
+REM (venv) install dev-tool pylint
+python -m pip install -U pylint
+
+REM (venv) install build-requirements
+python -m pip install requests unrar gitpython jsonpickle pathvalidate deprecation
 start "" /WAIT build-requirements.py
 REM for sequencial bat files ...
 REM start /wait cmd /c "file.bat"
