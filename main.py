@@ -393,17 +393,22 @@ def gitRepoExists(repo_system_path):
     return repoExists
 
 
-def extract_project(proj, extract_destination_system_path):
+def extract_project(proj, extract_destination_system_path, use_custom_filter=False):
     # extract rar-file to targetDir\rar-file-name\
     project_extract_path = extract_destination_system_path + "\\" + proj.fileName
     project_extract_path = project_extract_path[:-4]
     project_extract_path = project_extract_path.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
     proj.extractPath = project_extract_path
     rarf = rarfile.RarFile(proj.systemFilePath)
-    filtered_members = filter_unescessary_files_from_rar(proj, rarf)
-    print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
-    rarf.extractall(project_extract_path, members=filtered_members)
-    sysCommand("extract {} ------> .... rarf.extractall .... {})".format(proj.systemFilePath, extract_destination_system_path))
+    
+    if (use_custom_filter):
+        filtered_members = filter_unescessary_files_from_rar(proj, rarf)
+        print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
+        rarf.extractall(project_extract_path, members=filtered_members)
+    else:
+        rarf.extractall(project_extract_path)
+
+    sysCommand("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.systemFilePath, extract_destination_system_path))
 
 
 def maxLevel(checkLevel, arrayLength):
