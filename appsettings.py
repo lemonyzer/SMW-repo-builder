@@ -1,4 +1,4 @@
-class App:
+class AppSettings:
 
     _projects = list()
     _main_wait_for_input = False

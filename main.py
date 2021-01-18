@@ -6,8 +6,8 @@ import operator
 from email.utils import formatdate
 from html import escape
 
-from project import Project
-from project import ProjectEncoder
+from projectsnapshot import ProjectSnapshot
+from projectsnapshot import ProjectSnapshotEncoder
 
 import os
 from pathlib import Path, PurePath
@@ -21,7 +21,7 @@ import jsonpickle
 from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip install pathvalidate
 
 import deprecation
-from app import App
+from appsettings import AppSettings
 
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -43,7 +43,7 @@ def isDirectoryEntryRelevant(entry):
 ## load_directory_list
 ## 
 ## param: system_path_rar_files
-## return: project_list (list<Project>)
+## return: project_list (list<ProjectSnapshot>)
 ##
 ## loads and loops/iterates through directory elements
 ##  if element is directory
@@ -94,7 +94,7 @@ def load_directory_list(system_path_rar_files):
 ## parameter: 
 ##   * file_system_path: any File Path (not only rar-Files) 
 ##
-## return: Project Object
+## return: ProjectSnapshot Object
 ##
 def read_project_details_from_system_path(file_system_path):
     file_path = Path(file_system_path)
@@ -104,7 +104,7 @@ def read_project_details_from_system_path(file_system_path):
     proj_name = get_project_name_from_filename(file_path.name)
     proj_info = get_project_additional_info_from_filename(file_path.name)
     proj_system_path = str(file_path)
-    currentProject = Project(proj_timestamp, proj_name, proj_info, proj_system_path, file_path.name)
+    currentProject = ProjectSnapshot(proj_timestamp, proj_name, proj_info, proj_system_path, file_path.name)
 
     read_rar_specific_details_from_system_path(currentProject)
     return currentProject
@@ -619,11 +619,11 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
             extract_project(p, extract_destination_system_path)  # /projects/<rar-filename>/
             ## extract_destination_system_path
             ##  |
-            ##  |-<rar filename of Project 0>
+            ##  |-<rar filename of ProjectSnapshot 0>
             ##  |    |
             ##  |    |-<rarRootFolder>
             ##  |
-            ##  |-<rar filename of Project 1>
+            ##  |-<rar filename of ProjectSnapshot 1>
             ##  |     |
             ##  |     |-<rarRootFolder>
             ##
@@ -751,17 +751,17 @@ def load_database(filename):
 
 def save_database(data, filename):
     #print("Printing to check how it will look like")
-    #print(ProjectEncoder().encode(data))
+    #print(ProjectSnapshotEncoder().encode(data))
 
-    #print("Encode Project Objects into JSON formatted Data using custom JSONEncoder")
-    #dataJSONData = json.dumps(data, indent=4, cls=ProjectEncoder)
+    #print("Encode ProjectSnapshot Objects into JSON formatted Data using custom JSONEncoder")
+    #dataJSONData = json.dumps(data, indent=4, cls=ProjectSnapshotEncoder)
     #print(dataJSONData)
 
     print("saving {} with {} elements".format(filename,len(data)))
 
     fullfilename = sanitize_filename(filename + ".json")
     with open(fullfilename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, cls=ProjectEncoder, indent=4)
+        json.dump(data, f, ensure_ascii=False, cls=ProjectSnapshotEncoder, indent=4)
 
     fullfilename_pickle = sanitize_filename(filename + ".pickel.json")
     with open(fullfilename_pickle, 'w') as json_file:
@@ -1145,7 +1145,7 @@ def main_visual_check_compare_sort_and_timestamps():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    app = App()
+    app = AppSettings()
     app.system_path_rar_files
     app.system_path_repo
     app.system_path_extraction

@@ -1,6 +1,6 @@
 import deprecation
 from json import JSONEncoder
-class Project:
+class ProjectSnapshot:
     # SuperMarioWars 2014.06.05 UnityNetwork
     # SuperMarioWars 2015.04.05_2_Unity5_createPrefab_moreGenericWayV3_Works_Next_FullCharacterWithAnims
 
@@ -42,7 +42,7 @@ class Project:
 
 
 # subclass JSONEncoder
-class ProjectEncoder(JSONEncoder):
+class ProjectSnapshotEncoder(JSONEncoder):
     def default(self, o):
                 
         if isinstance(o, set):
