@@ -140,32 +140,65 @@ def showProjects(project_list):
         print()
 
 
-def get_timestamp_from_filename(fileName):
+def smw_schema_get_info_from_filename(filename, selected_property):
+
+    # TODO: check naming schema for all projects
+    #                    \|/
+    #       123456789012345   (15. element is seperator)
+    #       SuperMariaWars 2021.01.16 Description.rar
+    #       SuperMariaWars_2021.01.17 Description.rar
+    #       Maps_v15.rar
+    #
     # split string with " ", 1 time => list with 2 itmes
-    #123456789012345
-    #SuperMarioWars 2014
-    #SuperMarioWars_2014
-    #Maps_v15.rar
-    if len(fileName) > 15:
+
+    filename_properties = {
+        "project_name" : "",
+        "timestamp" : ""
+    }
+
+    if len(filename) > 15:
         splitChar = ""
-        if fileName[14] == " ":
-            splitChar = fileName[14]
-        elif fileName[14] == "_":
-            splitChar = fileName[14]
+        if filename[14] == " ":
+            splitChar = filename[14]
+        elif filename[14] == "_":
+            splitChar = filename[14]
 
         # BUG can't splitt with empty separator!
         # FIX
         if splitChar == "":
             # different naming schema
-            return "0000.00.00"
+            # project name will not be extracted, instead full filename will be used
+            # timestamp will not be extracted, instead "0000.00.00" will be used
+            filename_properties["project_name"] = filename
+            filename_properties["timestamp"] = "0000.00.00"
         else:
-            data = fileName.split(splitChar, 1)
-        # timestamp format: 10 characters
-        ## 123456789T
-        ## 2014.08.08
-        if len(data) > 1:
-            return data[1][0:10]
-    return "0000.00.00"
+            data = filename.split(splitChar, 1)
+
+            # project name extracted (first part of splitted string)
+            filename_properties["project_name"] = data[0]
+
+            if len(data) > 1:
+                # second part (should start with timestamp), proceeding...
+                # timestamp format: 10 characters
+                # 123456789T
+                # 2014.08.08
+                filename_properties["timestamp"] = data[1][0:10]
+            else:
+                # no second existing (splitting resulted in array of size 1)
+                # timestamp will not be extracted, instead "0000.00.00" will be used
+                filename_properties["timestamp"] = "0000.00.00"
+    else:
+        # filename is not long enough, doesn't matches standard smw naming schema!
+        # project name will not be extracted, instead full filename will be used
+        # timestamp will not be extracted, instead "0000.00.00" will be used
+        filename_properties["project_name"] = filename
+        filename_properties["timestamp"] = "0000.00.00"
+
+    return filename_properties[selected_property]
+
+
+def get_timestamp_from_filename(filename):
+    return smw_schema_get_info_from_filename(filename, "timestamp")
 
 def get_timestamp_from_rar_root_elements(project):
     rar = rarfile.RarFile(project.systemFilePath)
@@ -236,24 +269,18 @@ def creation_date(path_to_file):
             return stat.st_mtime
 
 
-def get_timestamp_from_filesystem(fileName):
-    return modified_date(fileName)
-    #return creation_date(fileName)
+def get_timestamp_from_filesystem(file_name):
+    return modified_date(file_name)
 
 
-def get_project_name_from_filename(fileName):
-    # TODO: check naming schema for all projects
-    #                    \|/
-    #       SuperMariaWars 2021.01.16 Description.rar
-    #       SuperMariaWars_2021.01.17 Description.rar
+def get_project_name_from_filename(filename):
+    return smw_schema_get_info_from_filename(filename, "project_name")
+
+
+
+def get_project_additional_info_from_filename(file_name):
     # split string with " ", 1 time => list with 2 itmes
-    data = fileName.split(" ", 1)
-    return data[0]
-
-
-def get_project_additional_info_from_filename(fileName):
-    # split string with " ", 1 time => list with 2 itmes
-    data = fileName.split(" ", 1)
+    data = file_name.split(" ", 1)
     if len(data) > 1:
         return data[1][10:]
     return ""
