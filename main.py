@@ -255,11 +255,23 @@ def get_timestamp_from_rar_root_elements(project):
 
     return string_list
 
-def get_newest_timestamp_from_rar_elements(project):
+def get_newest_timestamp_from_rar_content(project):
     # TODO:
     # finds latest modified file
     # returns date + time (+ filename?)
-    pass
+    rar = rarfile.RarFile(project.filesystem_file_path)
+    
+    # Init
+    newest_rar_element = None
+    if len(rar.infolist()) > 0:
+        newest_rar_element = rar.infolist()[0]
+
+    # Loop & Compare
+    for e in rar.infolist():
+        if newest_rar_element.date_time < e.date_time:
+            newest_rar_element = e
+    
+    return newest_rar_element
 
 
 def modified_date(path_to_file):
@@ -1141,8 +1153,25 @@ def main_visual_check_compare_sort_and_timestamps():
             compareresult = "!!!"
         print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(filesystem_timestamp, compareresult, fileNameTimestamp, "", p.filename))
 
+        # RAR content: newest file
+        rar_content_newest_element = get_newest_timestamp_from_rar_content(p)
+        
+        if not rar_content_newest_element == None:
+
+            time_tuple = rar_content_newest_element.date_time
+            dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
+            date_str = dt_obj.strftime("%Y.%m.%d")
+            rar_content_newest_element_timestamp = date_str
+            compareresult_rar_content = "NA"
+            if rar_content_newest_element_timestamp == filesystem_timestamp:
+                compareresult_rar_content = " = "
+            else:
+                compareresult_rar_content = "!!!"
+            print("{:<25} {:<5} {:<10} RAR({}) - newest file".format("", compareresult_rar_content, rar_content_newest_element_timestamp, rar_content_newest_element.filename))
+
+        # RAR content: root elements
         for timestamp_with_element_name in get_timestamp_from_rar_root_elements(p):
-            print("{:<25} {:<5} {:<20} |-{:<80} {}".format( "", "", "", timestamp_with_element_name, "" ))
+            print("{:<25} {:<5} {:<10} |-{:<80} {}".format( "", "", "", timestamp_with_element_name, "" ))
 
         #print("{:<25} {:<5} {:<20} / {:<80} {}".format("", "", "", "", "" ))
         print()
@@ -1239,8 +1268,10 @@ if __name__ == '__main__':
     gitcmds = list()
     workflow(projects, app.system_path_extraction, app.system_path_repo)     
 
+    print("gitcmds")
     for i in gitcmds:
         print(i)
 
+    print("extraction_destination_respective_repo_root_path")
     for p in projects:
         print(str(p.extraction_destination_respective_repo_root_path))
