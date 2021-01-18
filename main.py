@@ -116,7 +116,7 @@ def read_rar_specific_details_from_system_path(project):
         project.israrfile = True
         rar = rarfile.RarFile(project.systemFilePath)
         root_elements = get_root_elements_from_rar_namelist(rar.namelist())
-        project.setRootElements(root_elements)
+        project.root_elements = root_elements
         
         # TODO: append / extend ...
         app._global_rar_root_elements.extend(root_elements)
@@ -170,7 +170,7 @@ def get_timestamp_from_filename(fileName):
 def get_timestamp_from_rar_root_elements(project):
     rar = rarfile.RarFile(project.systemFilePath)
     
-    root_elements = project.getRootElements()
+    root_elements = project.root_elements
     string_list = []
     for e in root_elements:
         # https://www.saltycrane.com/blog/2008/11/python-datetime-time-conversions/
@@ -260,13 +260,13 @@ def get_project_additional_info_from_filename(fileName):
 
 
 def printProjects(list):
-    print("{:<18} - {:<31} - {:<24} - {:<120} - {}".format("timestamp", "rfc2822", "local_time", "fileName", "numOf rootElements"))
+    print("{:<18} - {:<31} - {:<24} - {:<120} - {}".format("timestamp", "rfc2822", "local_time", "fileName", "numOf root_elements"))
     for p in list:
         timestamp = p.timestamp
         local_time = time.ctime(timestamp)
         rfc2822 = formatdate(timestamp, True)
         p.rfc2822 = rfc2822
-        print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.fileName, len(p.rootElements)))
+        print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.fileName, len(p.root_elements)))
 
 
 def gitInitRepo(repo_system_path):
@@ -332,7 +332,7 @@ def isRarRootFolderRepoFolder(project):
     valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
 
     # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
-    intersectResult = compare_intersect(project.getRootElements(), valid)
+    intersectResult = compare_intersect(project.root_elements, valid)
 
     print(intersectResult)
     if len(intersectResult) >= 1:
@@ -397,22 +397,22 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     checkLevel = 0
 
-    if len(proj.getRootElements()) == 1:
+    if len(proj.root_elements) == 1:
         # single root element
-        if "Assets" in proj.getRootElements():
+        if "Assets" in proj.root_elements:
             print("Assets is rootElement, no filtering explusions!!!")
             return rar_file.namelist()
         else:
             # other rootElement (propably <UnityProjectName>)
             checkLevel = 1
             pass
-    elif len(proj.getRootElements()) > 1:
+    elif len(proj.root_elements) > 1:
         # multiple root elements
-        if "Assets" in proj.getRootElements():
-            # Assets in rootElements found, filtering only in level 0
+        if "Assets" in proj.root_elements:
+            # Assets in root_elements found, filtering only in level 0
             checkLevel = 0
         else:
-            # Assets NOT in rootElements found, filtering in level 1
+            # Assets NOT in root_elements found, filtering in level 1
             checkLevel = 1
 
     filteredmembers = list()
@@ -770,7 +770,7 @@ def cli_menu():
         [ ] - search for file inside rar-Files \n\
         [ ] - search for text inside rar-Files \n\
         [ ] - output timespan of all rar-Files\n\
-        [ ] - output rootElements of all rar-Files\n\
+        [ ] - output root_elements of all rar-Files\n\
         [ ] - export database [pass]\n\
         [ ] - import database [pass]\n\
             \n\
@@ -830,7 +830,7 @@ def command_line_interface():
 ##  * checks if item is a rar-File, marks israrfile True/False
 ##  * loops over all rar Files
 ##  *   optional: prints rar file content (some filters activated)
-##  *   analyses and saves all get_root_elements_from_rar_namelist() for each rar file in project.rootElements set/list
+##  *   analyses and saves all get_root_elements_from_rar_namelist() for each rar file in project.root_elements set/list
 ##  *   saves all root_elements in global_rar_root_elements (sumarization of all rar files)
 ##  *   prints root_elements
 ##  *   analyses rootDirectory @depricated !!!! BUG
@@ -857,9 +857,9 @@ def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=
 
             #print(rar.printdir())
             root_elements = get_root_elements_from_rar_namelist(rar.namelist())
-            p.setRootElements(root_elements)
-            print("{:<30}: {}".format("root_elements", len(p.getRootElements())))
-            for el in p.getRootElements():
+            p.root_elements = root_elements
+            print("{:<30}: {}".format("root_elements", len(p.root_elements)))
+            for el in p.root_elements:
                 print("{:<30}: {}".format("", el))
 
             # first_element_in_rar
@@ -1036,16 +1036,16 @@ def main_visual_check_rar_root_elements():
         print("RAR root elements folders/files by project")
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in projects:
-            if len(p.rootElements) == 1:
-                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
-            elif len(p.rootElements) > 1:
-                print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.rootElements)))
+            if len(p.root_elements) == 1:
+                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.root_elements), len(p.root_elements)))
+            elif len(p.root_elements) > 1:
+                print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.root_elements)))
                 i = 0
-                for e in p.getRootElements():
+                for e in p.root_elements:
                     i += 1
                     print("{:<127} [{}] {:<55}".format("|>", i, e))
             else:
-                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.getRootElements()), len(p.rootElements)))
+                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.root_elements), len(p.root_elements)))
 
     wait_for_input("check root elements [yes,no]:")
 

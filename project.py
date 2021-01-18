@@ -12,16 +12,18 @@ class Project:
         self.fileName = fileName
 
         self.israrfile = False
-        self.rootElements = set()
+        self._root_elements = set()
         self.extractPath = ""
         self.extractPathRepoBase = ""
         self.rfc2822 = ""
 
-    def setRootElements(self, newSet):
-        self.rootElements = newSet
+    @property
+    def root_elements(self):
+        return self._root_elements
 
-    def getRootElements(self):
-        return self.rootElements
+    @root_elements.setter
+    def root_elements(self, newSet):
+        self._root_elements = newSet
 
     def longDescription(self):
         return self.systemFilePath + "\n" + self.name + "\n" + str(self.timestamp) + "\n" + self.shortDescription
