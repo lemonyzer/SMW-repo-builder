@@ -142,7 +142,8 @@ def showProjects(project_list):
 
 def smw_schema_get_info_from_filename(filename, selected_property):
 
-    # TODO: check naming schema for all projects
+    # check naming schema for all projects
+    # smw standard naming schema (some exceptions existing)
     #                    \|/
     #       123456789012345   (15. element is seperator)
     #       SuperMariaWars 2021.01.16 Description.rar
