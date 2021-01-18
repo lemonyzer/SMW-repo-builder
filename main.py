@@ -80,7 +80,10 @@ def load_directory_list(system_path_rar_files):
         if entry.is_file():
             print("{:<30}: {} {}".format(str(path_entries), "file", entry.name))
             project = read_project_details_from_system_path(str(entry))
-            project_list.append(project)
+            if (project.israrfile):
+                project_list.append(project)
+            else:
+                print(f"dropping: {entry}")
 
     return project_list
 
@@ -917,9 +920,6 @@ def main_read_directory():
     print()
     project_list_stats(app.projects, True)
     wait_for_input("app.projects, continue?")
-
-    project_list_stats(app.projects, True)  # app.projects with israrfile set
-    wait_for_input("project_list_stats(), continue?")
     
 
 def main_sort():
