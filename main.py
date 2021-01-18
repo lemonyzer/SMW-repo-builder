@@ -100,9 +100,9 @@ def read_project_details_from_system_path(file_system_path):
     file_path = Path(file_system_path)
     # print("read project details from " + str(file_path))
     # proj_timestamp = get_timestamp_from_filename(entry)
-    proj_timestamp = getTimestampFromFilesystem(str(file_path))
-    proj_name = getProjectNameFromFilename(file_path.name)
-    proj_info = getProjectAdditionalInfoFromFilename(file_path.name)
+    proj_timestamp = get_timestamp_from_filesystem(str(file_path))
+    proj_name = get_project_name_from_filename(file_path.name)
+    proj_info = get_project_additional_info_from_filename(file_path.name)
     proj_system_path = str(file_path)
     currentProject = Project(proj_timestamp, proj_name, proj_info, proj_system_path, file_path.name)
 
@@ -236,12 +236,12 @@ def creation_date(path_to_file):
             return stat.st_mtime
 
 
-def getTimestampFromFilesystem(fileName):
+def get_timestamp_from_filesystem(fileName):
     return modified_date(fileName)
     #return creation_date(fileName)
 
 
-def getProjectNameFromFilename(fileName):
+def get_project_name_from_filename(fileName):
     # TODO: check naming schema for all projects
     #                    \|/
     #       SuperMariaWars 2021.01.16 Description.rar
@@ -251,7 +251,7 @@ def getProjectNameFromFilename(fileName):
     return data[0]
 
 
-def getProjectAdditionalInfoFromFilename(fileName):
+def get_project_additional_info_from_filename(fileName):
     # split string with " ", 1 time => list with 2 itmes
     data = fileName.split(" ", 1)
     if len(data) > 1:
