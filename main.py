@@ -67,20 +67,10 @@ def load_directory_list(system_path_rar_files):
             print("{:<30}: {} {}".format(str(path_entries), "directory", entry.name))
             project_list.extend(load_directory_list(str(entry)))   # FIX: rekursive Funktion muss Zwischenergebnisse Speichern!!!
 
-            ''' recursive function
-            ### this part is not needed
-            subPathEntries = Path(str(entry.resolve()))
-            print("test ...")
-            print(subPathEntries)
-            for subPath in subPathEntries.iterdir():
-                #print("{:<30}: {} {}".format(str(path_entries.resolve()), "directory", entry.name))
-                print("subPath: (should not occure) - " + str(subPath))
-            '''
-
         if entry.is_file():
             print("{:<30}: {} {}".format(str(path_entries), "file", entry.name))
             project = read_project_details_from_system_path(str(entry))
-            if (project.israrfile):
+            if (project.rar_is_rar_file):
                 project_list.append(project)
             else:
                 print(f"dropping: {entry}")
@@ -99,30 +89,46 @@ def load_directory_list(system_path_rar_files):
 def read_project_details_from_system_path(file_system_path):
     file_path = Path(file_system_path)
     # print("read project details from " + str(file_path))
-    # proj_timestamp = get_timestamp_from_filename(entry)
-    proj_timestamp = get_timestamp_from_filesystem(str(file_path))
-    proj_name = get_project_name_from_filename(file_path.name)
-    proj_info = get_project_additional_info_from_filename(file_path.name)
-    proj_system_path = str(file_path)
-    currentProject = ProjectSnapshot(proj_timestamp, proj_name, proj_info, proj_system_path, file_path.name)
 
+    # Analyze file name
+    filename_properties = smw_schema_get_info_from_filename(file_path.name)
+    proj_name = filename_properties["project_name"]                    # get_project_name_from_filename(file_path.name)
+    proj_timestamp_from_filename = filename_properties["timestamp"] # get_timestamp_from_filename(str(file_path))
+    proj_info = filename_properties["additional_info"]              # get_project_additional_info_from_filename(file_path.name)
+
+    # Analyze file system
+    proj_timestamp_from_filesystem = get_timestamp_from_filesystem(str(file_path))
+    proj_timestamp_from_filesystem_rfc2822 = formatdate(proj_timestamp_from_filesystem, True)
+
+    # store data in project
+    currentProject = ProjectSnapshot()
+    # Filesystem
+    currentProject.filesystem_file_path = str(file_path)
+    currentProject.filesystem_timestamp_modified = proj_timestamp_from_filesystem
+    currentProject.filesystem_timestamp_modified_rfc2822 = proj_timestamp_from_filesystem_rfc2822
+    # Filename
+    currentProject.filename = file_path.name
+    currentProject.filename_project_name = proj_name
+    currentProject.filename_timestamp = proj_timestamp_from_filename
+    currentProject.filename_additional_info = proj_info
+    # RAR-properties
     read_rar_specific_details_from_system_path(currentProject)
     return currentProject
 
 
 def read_rar_specific_details_from_system_path(project):
 
-    if rarfile.is_rarfile(project.systemFilePath):
-        project.israrfile = True
-        rar = rarfile.RarFile(project.systemFilePath)
+    if rarfile.is_rarfile(project.filesystem_file_path):
+        project.rar_is_rar_file = True
+        rar = rarfile.RarFile(project.filesystem_file_path)
         root_elements = get_root_elements_from_rar_namelist(rar.namelist())
-        project.root_elements = root_elements
+        project.rar_root_elements = root_elements
         
         # TODO: append / extend ...
         app._global_rar_root_elements.extend(root_elements)
     else:
-        project.israrfile = False
-    print("{:<30}: {}".format(project.systemFilePath, "file" + (" RAR" if project.israrfile else " NOT RAR marked")))   # conditional expression
+        project.rar_is_rar_file = False
+    print("{:<30}: {}".format(project.filesystem_file_path, "file" + (" RAR" if project.rar_is_rar_file else " NOT RAR marked")))   # conditional expression
     
     return
 
@@ -140,7 +146,7 @@ def showProjects(project_list):
         print()
 
 
-def smw_schema_get_info_from_filename(filename, selected_property):
+def smw_schema_get_info_from_filename(filename):
 
     # check naming schema for all projects
     # smw standard naming schema (some exceptions existing)
@@ -173,7 +179,7 @@ def smw_schema_get_info_from_filename(filename, selected_property):
             # timestamp will not be extracted, instead "0000.00.00" will be used
             filename_properties["project_name"] = filename
             filename_properties["timestamp"] = "0000.00.00"
-            filename_properties["additional_info"] = filename
+            filename_properties["additional_info"] = ""
         else:
             data = filename.split(splitChar, 1) # split only one time!
                                                 # ideal case:
@@ -193,12 +199,12 @@ def smw_schema_get_info_from_filename(filename, selected_property):
                 # * index starts from 0
                 # * end index is not included
                 filename_properties["timestamp"] = data[1][0:10]        # first 10 characters are the timestamp
-                filename_properties["additional_info"] = data[1][11]    # substring from 11. positon till end is additional info string
+                filename_properties["additional_info"] = data[1][10:]    # substring from 11. positon till end is additional info string
             else:
                 # no second existing (splitting resulted in array of size 1)
                 # timestamp will not be extracted, instead "0000.00.00" will be used
                 filename_properties["timestamp"] = "0000.00.00"
-                filename_properties["additional_info"] = filename
+                filename_properties["additional_info"] = ""
 
     else:
         # filename is not long enough, doesn't matches standard smw naming schema!
@@ -206,18 +212,27 @@ def smw_schema_get_info_from_filename(filename, selected_property):
         # timestamp will not be extracted, instead "0000.00.00" will be used
         filename_properties["project_name"] = filename
         filename_properties["timestamp"] = "0000.00.00"
-        filename_properties["additional_info"] = filename
+        filename_properties["additional_info"] = ""
 
-    return filename_properties[selected_property]
+    return filename_properties
+
+
+def get_project_name_from_filename(filename):
+    return smw_schema_get_info_from_filename(filename)["project_name"]
+
+
+def get_project_additional_info_from_filename(filename):
+    return smw_schema_get_info_from_filename(filename)["additional_info"]
 
 
 def get_timestamp_from_filename(filename):
-    return smw_schema_get_info_from_filename(filename, "timestamp")
+    return smw_schema_get_info_from_filename(filename)["timestamp"]
+
 
 def get_timestamp_from_rar_root_elements(project):
-    rar = rarfile.RarFile(project.systemFilePath)
+    rar = rarfile.RarFile(project.filesystem_file_path)
     
-    root_elements = project.root_elements
+    root_elements = project.rar_root_elements
     string_list = []
     for e in root_elements:
         # https://www.saltycrane.com/blog/2008/11/python-datetime-time-conversions/
@@ -287,22 +302,14 @@ def get_timestamp_from_filesystem(file_name):
     return modified_date(file_name)
 
 
-def get_project_name_from_filename(filename):
-    return smw_schema_get_info_from_filename(filename, "project_name")
-
-
-def get_project_additional_info_from_filename(filename):
-    return smw_schema_get_info_from_filename(filename, "additional_info")
-
 
 def printProjects(list):
     print("{:<18} - {:<31} - {:<24} - {:<120} - {}".format("timestamp", "rfc2822", "local_time", "fileName", "numOf root_elements"))
     for p in list:
-        timestamp = p.timestamp
+        timestamp = p.filesystem_timestamp_modified
         local_time = time.ctime(timestamp)
-        rfc2822 = formatdate(timestamp, True)
-        p.rfc2822 = rfc2822
-        print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.fileName, len(p.root_elements)))
+        rfc2822 = p.filesystem_timestamp_modified_rfc2822
+        print("{:<18} - {} - {} - {:<120} - {}".format(timestamp, rfc2822, local_time, p.filename, len(p.rar_root_elements)))
 
 
 def gitInitRepo(repo_system_path):
@@ -368,7 +375,7 @@ def isRarRootFolderRepoFolder(project):
     valid = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean"]
 
     # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
-    intersectResult = compare_intersect(project.root_elements, valid)
+    intersectResult = compare_intersect(project.rar_root_elements, valid)
 
     print(intersectResult)
     if len(intersectResult) >= 1:
@@ -407,7 +414,7 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     project_extract_path = project_extract_path[:-4]
     project_extract_path = project_extract_path.rstrip()  # FIX for rarfalies with space before extension "xyz .rar"
     proj.extractPath = project_extract_path
-    rarf = rarfile.RarFile(proj.systemFilePath)
+    rarf = rarfile.RarFile(proj.filesystem_file_path)
     
     if (use_custom_filter):
         filtered_members = filter_unescessary_files_from_rar(proj, rarf)
@@ -416,7 +423,7 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     else:
         rarf.extractall(project_extract_path)
 
-    sysCommand("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.systemFilePath, extract_destination_system_path))
+    sysCommand("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.filesystem_file_path, extract_destination_system_path))
 
 
 def maxLevel(checkLevel, arrayLength):
@@ -438,18 +445,18 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     checkLevel = 0
 
-    if len(proj.root_elements) == 1:
+    if len(proj.rar_root_elements) == 1:
         # single root element
-        if "Assets" in proj.root_elements:
+        if "Assets" in proj.rar_root_elements:
             print("Assets is rootElement, no filtering explusions!!!")
             return rar_file.namelist()
         else:
             # other rootElement (propably <UnityProjectName>)
             checkLevel = 1
             pass
-    elif len(proj.root_elements) > 1:
+    elif len(proj.rar_root_elements) > 1:
         # multiple root elements
-        if "Assets" in proj.root_elements:
+        if "Assets" in proj.rar_root_elements:
             # Assets in root_elements found, filtering only in level 0
             checkLevel = 0
         else:
@@ -619,7 +626,7 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
 
             i=i+1
             print()
-            print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.fileName))
+            print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.filename))
             ## wait_for_input("continue? [yes/No]:")
             ## clean up
             remove_all_project_files_from_repo(repo_system_path)  # delete previous project files
@@ -678,13 +685,13 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
 
             sysCommand("cd to extracted project folder")
 
-            # TODO join extractTargetRoot.resolve() with p.fileName to reach extractedPath
+            # TODO join extractTargetRoot.resolve() with p.filename to reach extractedPath
             # print(extract_destination_system_path)
             # if extractTargetRoot.exists():
             #       print(extractTargetRoot.resolve())
             #       print(str(extractTargetRoot))
 
-            # extractedProjectSystemPath = str(extractTargetRoot)+"\\"+p.fileName
+            # extractedProjectSystemPath = str(extractTargetRoot)+"\\"+p.filename
             # extractedProjectSystemPath = extractedProjectSystemPath[:-4]   # remove .rar
             # print(extractedProjectSystemPath)
 
@@ -720,10 +727,10 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 repo.git.add(A=True)        # same as git add .
                 gitcmds.append("repo.git.add(A=True)")
 
-                #fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
-                fileSystemTimestamp = p.rfc2822
+                #fileSystemTimestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
+                fileSystemTimestamp = p.filesystem_timestamp_modified_rfc2822
 
-                commitTitle = "{}".format(p.fileName)  # TODO escape character, convert LF and RETURN to html code?
+                commitTitle = "{}".format(p.filename)  # TODO escape character, convert LF and RETURN to html code?
                 commitBody = escape(p.longDescription())    # TODO escape character, convert LF and RETURN to html code?
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
                 gitCommand("git commit -m '{}' -m '{}' --date='{}' ".format(commitTitle, commitBody, fileSystemTimestamp))
@@ -871,7 +878,7 @@ def command_line_interface():
 ##  * checks if item is a rar-File, marks israrfile True/False
 ##  * loops over all rar Files
 ##  *   optional: prints rar file content (some filters activated)
-##  *   analyses and saves all get_root_elements_from_rar_namelist() for each rar file in project.root_elements set/list
+##  *   analyses and saves all get_root_elements_from_rar_namelist() for each rar file in project.rar_root_elements set/list
 ##  *   saves all root_elements in global_rar_root_elements (sumarization of all rar files)
 ##  *   prints root_elements
 ##  *   analyses rootDirectory @depricated !!!! BUG
@@ -879,13 +886,13 @@ def command_line_interface():
 ##
 def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=False, print_rarinfo_properties_of_first_element_in_rar=False):
     for p in project_list:
-        if rarfile.is_rarfile(p.systemFilePath):
+        if rarfile.is_rarfile(p.filesystem_file_path):
             # is RAR File...
-            p.israrfile = True
-            rar = rarfile.RarFile(p.systemFilePath)
+            p.rar_is_rar_file = True
+            rar = rarfile.RarFile(p.filesystem_file_path)
             
             print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            print("{:<30}: {}".format("p.fileName", p.fileName))
+            print("{:<30}: {}".format("p.filename", p.filename))
             if print_rar_content:
                 # list RAR content
                 print("{:<30}: contains {} elements; {}".format("rar.namelist()", len(rar.namelist()), "filtered: 'Assets', 'Library'"))
@@ -898,9 +905,9 @@ def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=
 
             #print(rar.printdir())
             root_elements = get_root_elements_from_rar_namelist(rar.namelist())
-            p.root_elements = root_elements
-            print("{:<30}: {}".format("root_elements", len(p.root_elements)))
-            for el in p.root_elements:
+            p.rar_root_elements = root_elements
+            print("{:<30}: {}".format("root_elements", len(p.rar_root_elements)))
+            for el in p.rar_root_elements:
                 print("{:<30}: {}".format("", el))
 
             # first_element_in_rar
@@ -917,8 +924,8 @@ def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=
             global_rar_root_elements.extend(root_elements)
         else:
             # p is not a RAR File!
-            #print(p.systemFilePath + " is not a RAR-File!")
-            p.israrfile = False
+            #print(p.filesystem_file_path + " is not a RAR-File!")
+            p.rar_is_rar_file = False
 
 def print_rar_getinfo_properies(rar, rar_info_element):
     print("{:<30}: {}".format("getinfo()", rar_info_element))
@@ -938,11 +945,12 @@ def project_list_stats(projects, show_non_rar_files=False):
     print("project_list_stats, show non rar files = " + "True" if show_non_rar_files else "False")
     rar_files = 0
     for p in projects:
-        if p.israrfile:
+        p.say_state_one_line()
+        if p.rar_is_rar_file:
             rar_files += 1 
         else:
             if show_non_rar_files:
-                print(p.systemFilePath)
+                print(p.filesystem_file_path)
     print(f'num of projects: {len(projects)}')
     print(f'num of rar-files: {rar_files}')
 
@@ -1064,7 +1072,7 @@ def main_visual_check_rar_root_elements():
     if showRARArchiveRootFolder:
         num_of_rar_files = 0
         for p in projects:
-            if p.israrfile:
+            if p.rar_is_rar_file:
                 num_of_rar_files = num_of_rar_files + 1
         print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
         print()
@@ -1077,16 +1085,16 @@ def main_visual_check_rar_root_elements():
         print("RAR root elements folders/files by project")
         print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
         for p in projects:
-            if len(p.root_elements) == 1:
-                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.root_elements), len(p.root_elements)))
-            elif len(p.root_elements) > 1:
-                print("{:<130} {:<55} {}".format(p.fileName, "------------------------------------------------", len(p.root_elements)))
+            if len(p.rar_root_elements) == 1:
+                print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
+            elif len(p.rar_root_elements) > 1:
+                print("{:<130} {:<55} {}".format(p.filename, "------------------------------------------------", len(p.rar_root_elements)))
                 i = 0
-                for e in p.root_elements:
+                for e in p.rar_root_elements:
                     i += 1
                     print("{:<127} [{}] {:<55}".format("|>", i, e))
             else:
-                print("{:<130} {:<55} {}".format(p.fileName, ", ".join(p.root_elements), len(p.root_elements)))
+                print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
 
     wait_for_input("check root elements [yes,no]:")
 
@@ -1111,19 +1119,19 @@ def main_visual_check_compare_sort_and_timestamps():
     print("\\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/ \\|/")
     print()
 
-    print("{:<25} {:<5} {:<20} {:<82} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "Date from RARInfo of RAR root elements", "p.fileName"))
+    print("{:<25} {:<5} {:<20} {:<82} {}".format("\\|/ FileSystem \\|/", " ", "FileName", "Date from RARInfo of RAR root elements", "p.filename"))
     for p in projects:
-        fileNameTimestamp = get_timestamp_from_filename(p.fileName)
+        fileNameTimestamp = get_timestamp_from_filename(p.filename)
         # 2015.04.18
 
-        # p.timestamp -> convert
+        # p.filesystem_timestamp_modified -> convert
         # CONVERT tutorial: https://timestamp.online/article/how-to-convert-timestamp-to-datetime-in-python
-        ##fileSystemTimestamp = datetime.datetime.fromtimestamp(p.timestamp).isoformat()
+        ##fileSystemTimestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
         ## ISO Format
         ## 2020-12-04T10:54:42+01:00
-        #dtts = datetime(p.timestamp)
+        #dtts = datetime(p.filesystem_timestamp_modified)
         #https://www.programiz.com/python-programming/datetime (Example 5: Get date from a timestamp)
-        timestamp = datetime.date.fromtimestamp(p.timestamp)
+        timestamp = datetime.date.fromtimestamp(p.filesystem_timestamp_modified)
         fileSystemTimestamp = timestamp.strftime("%Y.%m.%d")
 
         compareresult = "NA"
@@ -1131,7 +1139,7 @@ def main_visual_check_compare_sort_and_timestamps():
             compareresult = " = "
         else:
             compareresult = "!!!"
-        print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, "", p.fileName))
+        print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(fileSystemTimestamp, compareresult, fileNameTimestamp, "", p.filename))
 
         for timestamp_with_element_name in get_timestamp_from_rar_root_elements(p):
             print("{:<25} {:<5} {:<20} |-{:<80} {}".format( "", "", "", timestamp_with_element_name, "" ))
