@@ -40,6 +40,8 @@ class DB_RAR_Content(AppSettings.Base):
     rar_filename = Column(String(254), primary_key=True)
     rar_date_time = Column(String(254))
     rar_size_uncompressed = Column(String(254))
+    cflag_is_root_element = Column(String(254))
+    cflag_will_be_extracted = Column(String(254))
 
     def __repr__(self):
         return f"DB_RAR_Content('{self.id_rar_project}', '{self.rar_filename}', '{self.rar_date_time}', '{self.rar_size_uncompressed}')"

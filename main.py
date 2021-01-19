@@ -7,6 +7,7 @@ from email.utils import formatdate
 from html import escape
 
 from projectsnapshot import ProjectSnapshot
+from projectsnapshot import ExtendedRarInfo
 from projectsnapshot import ProjectSnapshotEncoder
 
 import os
@@ -125,6 +126,13 @@ def read_rar_specific_details_from_system_path(project):
         rar = rarfile.RarFile(project.filesystem_file_path)
         root_elements = get_root_elements_from_rar_namelist(rar.namelist())
         project.rar_root_elements = root_elements
+
+        result = filter_unescessary_files_from_rar(project, rar)
+        print(result)
+        if result:
+            project.rar_extended_infolist = result["ex_infolist"]
+        else:
+            project.rar_extended_infolist = list()
         
         # TODO: append / extend ...
         app._global_rar_root_elements.extend(root_elements)
@@ -431,7 +439,7 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     rarf = rarfile.RarFile(proj.filesystem_file_path)
     
     if (use_custom_filter):
-        filtered_members = filter_unescessary_files_from_rar(proj, rarf)
+        filtered_members = filter_unescessary_files_from_rar(proj, rarf)["filteredmembers"]
         print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
         rarf.extractall(project_extract_path, members=filtered_members)
     else:
@@ -440,7 +448,7 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     sys_command("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.filesystem_file_path, extract_destination_system_path))
 
 
-def maxLevel(checkLevel, arrayLength):
+def max_level(checkLevel, arrayLength):
     if checkLevel == 0:
         return 0
     else:
@@ -457,13 +465,31 @@ def filter_unescessary_files_from_rar(proj, rar_file):
     #for m in rar_file.namelist():
     #    print(f'{m}')
 
+    namelist_seperated = {
+        "filteredmembers": None,
+        "excludedmembers": None,
+        "ex_infolist": None
+    }
+
+    ex_infolist = list()
+
     checkLevel = 0
 
     if len(proj.rar_root_elements) == 1:
         # single root element
         if "Assets" in proj.rar_root_elements:
             print("Assets is rootElement, no filtering explusions!!!")
-            return rar_file.namelist()
+            namelist_seperated["filteredmembers"] = rar_file.namelist()
+
+            for member in rar_file.infolist():
+                member_is_root_element = False
+                if member.filename in proj.rar_root_elements:
+                    member_is_root_element = True
+                ex_rar_info = ExtendedRarInfo(member.filename, member.date_time, member.file_size, member_is_root_element, True)
+                ex_infolist.append(ex_rar_info)
+            namelist_seperated["ex_infolist"] = ex_infolist
+            
+            return namelist_seperated
         else:
             # other rootElement (propably <UnityProjectName>)
             checkLevel = 1
@@ -479,22 +505,36 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     filteredmembers = list()
     excludedmembers = list()
-    for member in rar_file.namelist():
-        array = member.split("\\")
 
-        basepathOfMember = member.split("\\")[maxLevel(checkLevel, len(array))]  # TODO fix/verify: Option 1 basedir extract with current filter, Option B second baseDir extract without filter. totalcommander to compare both base dir and delete similar files. check diff
+    for member in rar_file.infolist():
+        array = member.filename.split("\\")
+
+        basepathOfMember = member.filename.split("\\")[max_level(checkLevel, len(array))]  # TODO fix/verify: Option 1 basedir extract with current filter, Option B second baseDir extract without filter. totalcommander to compare both base dir and delete similar files. check diff
         # print(basepathOfMember)
         if basepathOfMember in exclusions:
             if debug:
-                print(f'excluded member: {member}')
-            excludedmembers.append(member)
+                print(f'excluded member: {member.filename}')
+            excludedmembers.append(member.filename)
+            will_be_extracted = False
         else:
-            filteredmembers.append(member)
+            filteredmembers.append(member.filename)
+            will_be_extracted = True
+        
+        member_is_root_element = False
+        if member.filename in proj.rar_root_elements:
+            member_is_root_element = True
+        ex_rar_info = ExtendedRarInfo(member.filename, member.date_time, member.file_size, member_is_root_element, will_be_extracted)
+
+        ex_infolist.append(ex_rar_info)
 
     # for i in excludedmembers:
     #     print(f'excluded: {i}')
 
-    return filteredmembers
+    namelist_seperated["filteredmembers"] = filteredmembers
+    namelist_seperated["excludedmembers"] = excludedmembers
+    namelist_seperated["ex_infolist"] = ex_infolist
+
+    return namelist_seperated
 
 
 def find_project_repo_level(project_extracted_path):
@@ -1246,7 +1286,8 @@ def database_import(project_list):
 
         # item.id
         # is the automatically assigned primary key ID given in the database.
-        database_import_rar_content(p, item.id)
+        #database_import_rar_content(p, item.id)
+        database_import_rar_content_extended(p, item.id)
 
     app.session.commit()
 
@@ -1270,6 +1311,25 @@ def database_import_rar_content(p, p_id):
 
         app.session.add(db_item)
 
+
+def database_import_rar_content_extended(p, p_id):
+   
+    for ex_rared_element in p.rar_extended_infolist:
+
+        time_tuple = ex_rared_element._date_time
+        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
+        date_str = dt_obj.strftime("%Y.%m.%d")
+
+        db_item = DB_RAR_Content (
+            id_rar_project = p_id,
+            rar_filename = ex_rared_element._filename,
+            rar_date_time = date_str,
+            rar_size_uncompressed = ex_rared_element._file_size,
+            cflag_is_root_element = ex_rared_element._is_root_element,
+            cflag_will_be_extracted = ex_rared_element._will_be_extracted
+        )
+
+        app.session.add(db_item)
 
 
 # Press the green button in the gutter to run the script.
@@ -1304,32 +1364,24 @@ if __name__ == '__main__':
     ## read directory
     ##
     main_read_directory()
-
     database_import(app.projects)
-    
-    input("write something...")
 
     ##
     ## sort Projects
     ##
     main_sort()
 
-
-    # deprecated 
-    # main_visual_sort_check()
-
+    x = input(message)
 
     ##
     ## save
     ##
     main_save()
     
-
     ##
     ## load
     ##
     main_load()
-
 
     ##
     ## show RAR content: root elements
@@ -1340,7 +1392,6 @@ if __name__ == '__main__':
     ## compare timestamps
     ##
     main_visual_check_compare_sort_and_timestamps()
-
 
     ##
     ##  Workflow

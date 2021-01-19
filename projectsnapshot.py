@@ -2,6 +2,23 @@ import deprecation
 from json import JSONEncoder
 
 
+class ExtendedRarInfo():
+    _filename = ""
+    _date_time = None
+    _file_size = None
+    _is_root_element = False
+    _will_be_extracted = True
+
+    def __init__(self, fn, dt, s, ire, wbe):
+        self._filename=fn
+        self._date_time=dt
+        self._file_size=s
+        self._is_root_element=ire
+        self._will_be_extracted=wbe
+
+    def __str__(self):
+        return f"{self._filename} {self._is_root_element}"
+
 class ProjectSnapshot:
     # SuperMarioWars 2014.06.05 UnityNetwork
     # SuperMarioWars 2015.04.05_2_Unity5_createPrefab_moreGenericWayV3_Works_Next_FullCharacterWithAnims
@@ -19,6 +36,7 @@ class ProjectSnapshot:
 
     _rar_is_rar_file = False
     _rar_root_elements = list()
+    _rar_extended_infolist = None
 
     _extraction_destination = ""
     _extraction_destination_respective_repo_root_path = ""
@@ -108,6 +126,14 @@ class ProjectSnapshot:
     @rar_root_elements.setter
     def rar_root_elements(self, new_set):
         self._rar_root_elements = set(new_set)
+
+    @property
+    def rar_extended_infolist(self):
+        return self._rar_extended_infolist
+
+    @rar_extended_infolist.setter
+    def rar_extended_infolist(self, newlist):
+        self._rar_extended_infolist = newlist
         
 
     @property
