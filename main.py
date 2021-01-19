@@ -1237,7 +1237,39 @@ def database_import(project_list):
             extraction_destination_respective_repo_root_path = p.extraction_destination_respective_repo_root_path)
 
         app.session.add(item)
+        app.session.flush()
+        # At this point, the object f has been pushed to the DB, 
+        # and has been automatically assigned a unique primary key id
+        app.session.refresh(item)
+        # refresh updates given object in the session with its state in the DB
+        # (and can also only refresh certain attributes - search for documentation)
+
+        # item.id
+        # is the automatically assigned primary key ID given in the database.
+        database_import_rar_content(p, item.id)
+
     app.session.commit()
+
+
+def database_import_rar_content(p, p_id):
+
+    rar = rarfile.RarFile(p.filesystem_file_path)
+    
+    for rared_element in rar.infolist():
+
+        time_tuple = rared_element.date_time
+        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
+        date_str = dt_obj.strftime("%Y.%m.%d")
+
+        db_item = DB_RAR_Content (
+            id_rar_project = p_id,
+            rar_filename = rared_element.filename,
+            rar_date_time = date_str,
+            rar_size_uncompressed = rared_element.file_size
+        )
+
+        app.session.add(db_item)
+
 
 
 # Press the green button in the gutter to run the script.

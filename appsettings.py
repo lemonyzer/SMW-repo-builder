@@ -6,8 +6,13 @@ from sqlalchemy.orm import sessionmaker
 
 class AppSettings:
     
+    system_path_database = 'sqlite:///R:/rar-projects.db'
+    system_path_rar_files = "R:\\SMW-Test"
+    system_path_repo = "R:\\repoTest"
+    system_path_extraction = "R:\\extractTest"
+
     #engine = create_engine('sqlite:///:memory:', echo=True)
-    engine = create_engine('sqlite:///rar-projects.db', echo=True)
+    engine = create_engine(system_path_database, echo=True)
     Base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -23,10 +28,7 @@ class AppSettings:
 
     _global_rar_root_elements = list()
 
-    system_path_rar_files = "R:\\SMW-Test"
-    system_path_repo = "R:\\repoTest"
-    system_path_extraction = "R:\\extractTest"
-
+    
     @property
     def projects_sorted(self):
         return self._project_list_sorted
