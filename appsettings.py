@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 
 class AppSettings:
     
-    engine = create_engine('sqlite:///:memory:', echo=True)
+    #engine = create_engine('sqlite:///:memory:', echo=True)
+    engine = create_engine('sqlite:///rar-projects.db', echo=True)
     Base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()

@@ -1189,12 +1189,18 @@ def main_visual_check_compare_sort_and_timestamps():
     print()
     wait_for_input("check timestamps [yes,no]:")
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
 
-    app = AppSettings()
+def database_reinit():
+    database_drop_all()
+    database_first_init()
+
+def database_drop_all():
+    app.Base.metadata.drop_all(app.engine)
+
+def database_first_init():
     app.Base.metadata.create_all(app.engine)
 
+def database_single_static_import():
     p1 = DB_ProjectSnapshot(
     filename = "SuperMarioWars 2015.04.14_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711.rar",
     filename_project_name = "SuperMarioWars", 
@@ -1209,11 +1215,37 @@ if __name__ == '__main__':
 
     app.session.add(p1)
     app.session.commit()
+
+def database_show_all():
     for row in app.session.query(DB_ProjectSnapshot,DB_ProjectSnapshot.filename).all():
         print(row.DB_ProjectSnapshot, row.filename)
 
-    input("Enter somthing: ")
-    input("Enter somthing: ")
+def database_import(project_list):
+
+    for p in project_list:
+
+        item = DB_ProjectSnapshot(
+            filename = p.filename,
+            filename_project_name = p.filename_project_name, 
+            filename_timestamp = p.filename_timestamp,
+            filename_additional_info = p.filename_additional_info,
+            filesystem_file_path = p.filesystem_file_path,
+            filesystem_timestamp_modified = p.filesystem_timestamp_modified,
+            filesystem_timestamp_modified_rfc2822 = p.filesystem_timestamp_modified_rfc2822,
+
+            extraction_destination = p.extraction_destination,
+            extraction_destination_respective_repo_root_path = p.extraction_destination_respective_repo_root_path)
+
+        app.session.add(item)
+    app.session.commit()
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+
+    app = AppSettings()
+    
+    database_reinit()
 
     app.system_path_rar_files
     app.system_path_repo
@@ -1240,7 +1272,10 @@ if __name__ == '__main__':
     ## read directory
     ##
     main_read_directory()
+
+    database_import(app.projects)
     
+    input("write something...")
 
     ##
     ## sort Projects
