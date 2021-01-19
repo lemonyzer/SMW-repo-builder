@@ -23,6 +23,8 @@ from pathvalidate import sanitize_filename  # sanitize_filename()  #  py -m pip 
 import deprecation
 from appsettings import AppSettings
 
+from models import DB_ProjectSnapshot, DB_RAR_Content
+
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -1191,6 +1193,28 @@ def main_visual_check_compare_sort_and_timestamps():
 if __name__ == '__main__':
 
     app = AppSettings()
+    app.Base.metadata.create_all(app.engine)
+
+    p1 = DB_ProjectSnapshot(
+    filename = "SuperMarioWars 2015.04.14_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711.rar",
+    filename_project_name = "SuperMarioWars", 
+    filename_timestamp = "2015.04.14",
+    filename_additional_info = "_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711.rar",
+    filesystem_file_path = "R:\\SuperMarioWars\\SuperMarioWars 2015.04.14_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711.rar",
+    filesystem_timestamp_modified = "1429003281.2974927",
+    filesystem_timestamp_modified_rfc2822 = "Tue, 14 Apr 2015 11:21:21 +0200",
+
+    extraction_destination = "R:\\extractTest\\SuperMarioWars 2015.04.14_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711",
+    extraction_destination_respective_repo_root_path = "R:\\extractTest\\SuperMarioWars 2015.04.14_2 Unity5_NetworkedPlayer_DataTweaks_part2_build0.711\\SuperMarioWars_UnityNetwork")
+
+    app.session.add(p1)
+    app.session.commit()
+    for row in app.session.query(DB_ProjectSnapshot,DB_ProjectSnapshot.filename).all():
+        print(row.DB_ProjectSnapshot, row.filename)
+
+    input("Enter somthing: ")
+    input("Enter somthing: ")
+
     app.system_path_rar_files
     app.system_path_repo
     app.system_path_extraction
