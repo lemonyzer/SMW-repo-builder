@@ -439,6 +439,10 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     rarf = rarfile.RarFile(proj.filesystem_file_path)
     
     if (use_custom_filter):
+        # !!!
+        # TODO filter_unescessary_files_from_rar already executed, results NOT stored in project.....
+        # TODO store restults 
+        #
         filtered_members = filter_unescessary_files_from_rar(proj, rarf)["filteredmembers"]
         print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
         rarf.extractall(project_extract_path, members=filtered_members)
