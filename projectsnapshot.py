@@ -40,6 +40,11 @@ class ProjectSnapshot:
     _rar_to_extract_namelist = list()
     _rar_not_to_extract_namelist = list()
 
+    _rar_content_newest_file_element = None
+    _rar_content_newest_file_element_timestamp = None
+    _rar_content_newest_directory_element = None
+    _rar_content_newest_directory_element_timestamp = None
+
     _extraction_destination = ""
     _extraction_destination_respective_repo_root_path = ""
 

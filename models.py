@@ -15,6 +15,10 @@ class DB_ProjectSnapshot(AppSettings.Base):
     filesystem_timestamp_modified = Column(String(254), )
     filesystem_timestamp_modified_rfc2822 = Column(String(254), )
 
+    rar_content_newest_file_element = Column(String(254), )
+    rar_content_newest_file_element_timestamp = Column(String(254), )
+    rar_content_newest_directory_element = Column(String(254), )
+    rar_content_newest_directory_element_timestamp = Column(String(254), )
     # rar_is_rar_file = Column(String(254) )
     # rar_root_folder = Column(String(254) )
     # rar_root_elements = Column(String(254) )        1 zu n: -> eigene tabelle, root_elements aber auch in DB_RAR_Content analisierbar

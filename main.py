@@ -13,6 +13,7 @@ from projectsnapshot import ProjectSnapshotEncoder
 import os
 from pathlib import Path, PurePath
 from unrar import rarfile
+from unrar import unrarlib
 import shutil
 from git import Repo, NoSuchPathError, InvalidGitRepositoryError
 
@@ -124,21 +125,42 @@ def read_rar_specific_details_from_system_path(project):
     if rarfile.is_rarfile(project.filesystem_file_path):
         project.rar_is_rar_file = True
         rar = rarfile.RarFile(project.filesystem_file_path)
-        root_elements = get_root_elements_from_rar_namelist(rar.namelist())
-        project.rar_root_elements = root_elements
+        results = get_root_elements_and_newest_elements_from_rar_infolist(rar.infolist())
 
-        result = filter_unescessary_files_from_rar(project, rar)
+        project._rar_content_newest_directory_element = results["newest_rar_directory"].filename
+        project._rar_content_newest_directory_element_timestamp = results["newest_rar_directory"].date_time
+        project._rar_content_newest_file_element = results["newest_rar_file"].filename
+        project._rar_content_newest_file_element_timestamp = results["newest_rar_file"].date_time
+        
+        '''
+        project._rar_content_newest_directory_element = result["newest_directory_filename"]
+        project._rar_content_newest_directory_element_timestamp = result["newest_directory_timestamp"]
+        project._rar_content_newest_file_element = result["newest_file_filename"]
+        project._rar_content_newest_file_element_timestamp = result["newest_file_timestamp"]
+        '''
+        project.rar_root_elements = results["root_elements"]
 
-        if result:
-            project.rar_extended_infolist = result["ex_infolist"]
-            project.rar_to_extract_namelist = result["filteredmembers"]
-            project.rar_not_to_extract_namelist = result["excludedmembers"]
+        results_2 = filter_unescessary_files_from_rar(project, rar)
+
+        if results_2:
+            project.rar_extended_infolist = results_2["ex_infolist"]
+            project.rar_to_extract_namelist = results_2["filteredmembers"]
+            project.rar_not_to_extract_namelist = results_2["excludedmembers"]
         else:
             project.rar_extended_infolist = list()
             project.rar_to_extract_namelist = rar.namelist()
             project.rar_not_to_extract_namelist = list()
 
-        app._global_rar_root_elements.extend(root_elements)
+        
+        results_3 = get_newest_elements_from_filtered_rar_infolist(results_2["filtered_infolist"])
+        
+        project._rar_content_newest_directory_element = results_3["newest_rar_directory"].filename
+        project._rar_content_newest_directory_element_timestamp = results_3["newest_rar_directory"].date_time
+        project._rar_content_newest_file_element = results_3["newest_rar_file"].filename
+        project._rar_content_newest_file_element_timestamp = results_3["newest_rar_file"].date_time
+        
+
+        app._global_rar_root_elements.extend(results["root_elements"])
     else:
         project.rar_is_rar_file = False
     print("{:<30}: {}".format(project.filesystem_file_path, "file" + (" RAR" if project.rar_is_rar_file else " NOT RAR marked")))   # conditional expression
@@ -267,24 +289,6 @@ def get_timestamp_from_rar_root_elements(project):
         string_list.append(f"{date_str}; {rar.getinfo(e).filename}")
 
     return string_list
-
-def get_newest_timestamp_from_rar_content(project):
-    # TODO:
-    # finds latest modified file
-    # returns date + time (+ filename?)
-    rar = rarfile.RarFile(project.filesystem_file_path)
-    
-    # Init
-    newest_rar_element = None
-    if len(rar.infolist()) > 0:
-        newest_rar_element = rar.infolist()[0]
-
-    # Loop & Compare
-    for e in rar.infolist():
-        if newest_rar_element.date_time < e.date_time:
-            newest_rar_element = e
-    
-    return newest_rar_element
 
 
 def modified_date(path_to_file):
@@ -482,6 +486,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
     namelist_seperated = {
         "filteredmembers": None,
         "excludedmembers": None,
+        "filtered_infolist": None,
         "ex_infolist": None
     }
 
@@ -494,6 +499,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
         if "Assets" in proj.rar_root_elements:
             print("Assets is rootElement, not filtering exclusions!!!")
             namelist_seperated["filteredmembers"] = rar_file.namelist()
+            namelist_seperated["filtered_infolist"] = rar_file.infolist()
 
             for member in rar_file.infolist():
                 member_is_root_element = is_rar_root_element(member.filename)
@@ -520,6 +526,8 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     filteredmembers = list()
     excludedmembers = list()
+    filtered_infolist = list()
+
 
     for member in rar_file.infolist():
         array = member.filename.split("\\")
@@ -532,6 +540,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
             excludedmembers.append(member.filename)
             will_be_extracted = False
         else:
+            filtered_infolist.append(member)
             filteredmembers.append(member.filename)
             will_be_extracted = True
         
@@ -547,6 +556,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     namelist_seperated["filteredmembers"] = filteredmembers
     namelist_seperated["excludedmembers"] = excludedmembers
+    namelist_seperated["filtered_infolist"] = filtered_infolist
     namelist_seperated["ex_infolist"] = ex_infolist
 
     return namelist_seperated
@@ -812,15 +822,98 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
         remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
 
-def get_root_elements_from_rar_namelist(rarfile_content_filenamelist):
-    # analyze the rarfile.filenames() list to find all root elements (files and folders)
+def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
+    # analyze the rarfile.infolist() list to find all root elements (files and folders)
+    
+    # Init
     root_elements = set()
-    for item in rarfile_content_filenamelist:
-        # TODO
-        # TRY
-        root_elements.add(item.split("\\", 1)[0])
+
+    newest_rar_file = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+    newest_rar_directory = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+
+    for item in rar_info_list:
+
+        # newest rar file/directory
+        #
+        splitted = item.filename.split("\\")
+        filename_part = len(splitted)-1
+        if "." in splitted[filename_part]:
+            # File (not 100% )
+            if newest_rar_file.date_time < item.date_time:
+                newest_rar_file = item
+        else:
+            #Folder
+            if newest_rar_directory.date_time < item.date_time:
+                newest_rar_directory = item
+
+        # root elements
+        #
+        # TODO TRY
+        root_elements.add(item.filename.split("\\", 1)[0])
         #root_elements.add(item.split("\\")[0])
-    return root_elements
+    
+    print ("{:<120} (newest file)".format(newest_rar_file.filename))
+    print ("{:<120} (newest directory)".format(newest_rar_directory.filename))
+
+    results = {
+        "root_elements": root_elements,
+        "newest_rar_file": newest_rar_file,
+        "newest_rar_directory": newest_rar_directory
+        # "newest_rar_file_filename": newest_rar_file_filename,
+        # "newest_rar_file_timestamp": newest_rar_file_timestamp,
+        # "newest_rar_directory_filename": newest_rar_directory_filename,
+        # "newest_rar_directory_timestamp": newest_rar_directory_timestamp
+    }
+
+    return results
+
+
+def get_newest_elements_from_filtered_rar_infolist(rar_info_list):
+
+    newest_rar_file = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+    newest_rar_directory = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+
+    for item in rar_info_list:
+
+        splitted = item.filename.split("\\")
+        filename_part = len(splitted)-1
+        if "." in splitted[filename_part]:
+            # File (not 100% )
+            if newest_rar_file.date_time < item.date_time:
+                newest_rar_file = item
+        else:
+            #Folder
+            if newest_rar_directory.date_time < item.date_time:
+                newest_rar_directory = item
+
+    
+    print ("{:<120} (FILTERED: newest file)".format(newest_rar_file.filename))
+    print ("{:<120} (FILTERED: newest directory)".format(newest_rar_directory.filename))
+
+    results = {
+        "newest_rar_file": newest_rar_file,
+        "newest_rar_directory": newest_rar_directory
+    }
+
+    return results
+
+def get_newest_timestamp_from_rar_content(project):
+    # TODO:
+    # finds latest modified file
+    # returns date + time (+ filename?)
+    rar = rarfile.RarFile(project.filesystem_file_path)
+    
+    # Init
+    newest_rar_element = None
+    if len(rar.infolist()) > 0:
+        newest_rar_element = rar.infolist()[0]
+
+    # Loop & Compare
+    for e in rar.infolist():
+        if newest_rar_element.date_time < e.date_time:
+            newest_rar_element = e
+    
+    return newest_rar_element
 
 
 def load_database(filename):
@@ -976,7 +1069,7 @@ def analyze_rar_files(project_list, global_rar_root_elements, print_rar_content=
                 print("{:<30}: contains {} elements; {}".format("rar.namelist()", len(rar.namelist()), "filtered: *"))
 
             #print(rar.printdir())
-            root_elements = get_root_elements_from_rar_namelist(rar.namelist())
+            root_elements = get_root_elements_and_newest_elements_from_rar_infolist(rar.infolist())
             p.rar_root_elements = root_elements
             print("{:<30}: {}".format("root_elements", len(p.rar_root_elements)))
             for el in p.rar_root_elements:

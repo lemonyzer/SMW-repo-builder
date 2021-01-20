@@ -17,7 +17,7 @@ rar_filename not like "%\Library\metadata%" AND
 rar_filename not like "%\Library\ScriptAssemblies%" AND
 rar_filename not like "%\Library\ShaderCache%" AND
 rar_filename not like "%\Library\shadercompiler%" AND
--- 32 einzelne filter
+-- 22 einzelne filter
 rar_filename not like "%\Library\AnnotationManager" AND
 rar_filename not like "%\Library\assetDatabase3" AND
 rar_filename not like "%\Library\AssetImportState" AND
@@ -47,7 +47,7 @@ ORDER BY rar_date_time desc
 
 
 
--- 32 einzelne filter
+-- 22 einzelne filter
 -- SuperMarioWars_UnityNetwork\Library\LastSceneManagerSetup.txt
 -- SuperMarioWars_UnityNetwork\Library\CrashedAssetImports.txt
 -- SuperMarioWars\Library\CurrentMaximizeLayout.dwlt
