@@ -1,14 +1,18 @@
+-- check which files WILL NOT be extracted:
+
 SELECT * FROM DB_RAR_Content WHERE 
-rar_filename like "%\Library"
-ORDER BY rar_date_time desc
+cflag_will_be_extracted == "0" AND
+rar_filename not like "SuperMarioWars\Library%" AND
+rar_filename not like "SuperMarioWars_clean\Library%" AND
+rar_filename not like "SuperMarioWars_UnityNetwork\Library%" AND
+rar_filename not like "SuperMarioWars_UnityNetwork_Server_headless\Library%" AND
+rar_filename not like "SuperMarioWars_UnityNetwork\Temp\%" --AND
 
 
 
 
 
-
-
-
+-- check which files WILL BE extracted:
 
 SELECT * FROM DB_RAR_Content WHERE 
 --cflag_will_be_extracted == "1" AND
@@ -40,33 +44,12 @@ rar_filename not like "%\Library\LibraryFormatVersion.txt" AND
 rar_filename not like "%\Library\CurrentMaximizeLayout.dwlt" AND
 rar_filename not like "%\Library\CrashedAssetImports.txt" AND
 rar_filename not like "%\Library\LastSceneManagerSetup.txt"
+ORDER BY rar_filename desc
+
+
+
+
+-- alle Ordner mit namen Library (falls im Projekt selbst auch Ordner Library genannt wurden)
+SELECT * FROM DB_RAR_Content WHERE 
+rar_filename like "%\Library"
 ORDER BY rar_date_time desc
-
-
-
-
-
-
--- 22 einzelne filter
--- SuperMarioWars_UnityNetwork\Library\LastSceneManagerSetup.txt
--- SuperMarioWars_UnityNetwork\Library\CrashedAssetImports.txt
--- SuperMarioWars\Library\CurrentMaximizeLayout.dwlt
--- SuperMarioWars_UnityNetwork\Library\LibraryFormatVersion.txt
--- SuperMarioWars_clean\Library\AssetVersioning.db
--- SuperMarioWars_clean\Library\ScriptMapper
-    "%AnnotationManager",
-     "%assetDatabase3",
-      "%AssetImportState",
-       "%AssetServerCacheV3",
-        "%AssetVersioning.db",
-         "%BuildPlayer.prefs",
-           "%BuildSettings.asset",
-            "%CurrentLayout.dwlt",
-             "%EditorUserBuildSettings.asset",
-              "%EditorUserSettings.asset",
-               "%expandedItems",
-                "%FailedAssetImports.txt",
-                 "%guidmapper",
-                  "%InspectorExpandedItems.asset",
-                   "%MonoManager.asset",
-                    "%ProjectSettings.asset")
