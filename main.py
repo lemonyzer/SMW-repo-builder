@@ -128,7 +128,7 @@ def read_rar_specific_details_from_system_path(project):
         project.rar_root_elements = root_elements
 
         result = filter_unescessary_files_from_rar(project, rar)
-        print(result)
+
         if result:
             project.rar_extended_infolist = result["ex_infolist"]
             project.rar_to_extract_namelist = result["filteredmembers"]
@@ -138,8 +138,6 @@ def read_rar_specific_details_from_system_path(project):
             project.rar_to_extract_namelist = rar.namelist()
             project.rar_not_to_extract_namelist = list()
 
-        
-        # TODO: append / extend ...
         app._global_rar_root_elements.extend(root_elements)
     else:
         project.rar_is_rar_file = False
@@ -494,7 +492,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
     if len(proj.rar_root_elements) == 1:
         # single root element
         if "Assets" in proj.rar_root_elements:
-            print("Assets is rootElement, no filtering explusions!!!")
+            print("Assets is rootElement, not filtering exclusions!!!")
             namelist_seperated["filteredmembers"] = rar_file.namelist()
 
             for member in rar_file.infolist():

@@ -6,13 +6,16 @@ from sqlalchemy.orm import sessionmaker
 
 class AppSettings:
     
-    system_path_database = 'sqlite:///R:/rar-projects.db'
-    system_path_rar_files = "R:\\SMW-Test"
+    # system_path_database = 'sqlite:///:memory:'               # database in memory
+    system_path_database = 'sqlite:///R:/rar-projects.db'       # database on disk
+
+    system_path_rar_files = "R:\\SMW-Test"                      # test environment
+    # system_path_rar_files = "R:\\SuperMarioWars"              # production
+    
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
 
-    #engine = create_engine('sqlite:///:memory:', echo=True)
-    engine = create_engine(system_path_database, echo=True)
+    engine = create_engine(system_path_database, echo=False)
     Base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()
