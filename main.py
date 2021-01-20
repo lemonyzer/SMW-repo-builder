@@ -434,6 +434,11 @@ def git_repo_exists(repo_system_path):
 
     return repoExists
 
+def is_rar_root_element(rar_filename):
+    if rar_filename == rar_filename.split("\\", 1)[0]:
+        return True
+    else:
+        return False
 
 def extract_project(proj, extract_destination_system_path, use_filtered_namelist=True):
     # extract rar-file to targetDir\rar-file-name\
@@ -493,10 +498,10 @@ def filter_unescessary_files_from_rar(proj, rar_file):
             namelist_seperated["filteredmembers"] = rar_file.namelist()
 
             for member in rar_file.infolist():
-                member_is_root_element = False
+                member_is_root_element = is_rar_root_element(member.filename)
                 # TODO: optimizable? 
-                if member.filename in proj.rar_root_elements:
-                    member_is_root_element = True
+                #if member.filename in proj.rar_root_elements:
+                #    member_is_root_element = True
                 ex_rar_info = ExtendedRarInfo(member.filename, member.date_time, member.file_size, member_is_root_element, True)
                 ex_infolist.append(ex_rar_info)
             namelist_seperated["ex_infolist"] = ex_infolist
@@ -532,9 +537,9 @@ def filter_unescessary_files_from_rar(proj, rar_file):
             filteredmembers.append(member.filename)
             will_be_extracted = True
         
-        member_is_root_element = False
-        if member.filename in proj.rar_root_elements:
-            member_is_root_element = True
+        member_is_root_element = is_rar_root_element(member.filename)
+        #if member.filename in proj.rar_root_elements:
+        #    member_is_root_element = True
         ex_rar_info = ExtendedRarInfo(member.filename, member.date_time, member.file_size, member_is_root_element, will_be_extracted)
 
         ex_infolist.append(ex_rar_info)
@@ -813,7 +818,10 @@ def get_root_elements_from_rar_namelist(rarfile_content_filenamelist):
     # analyze the rarfile.filenames() list to find all root elements (files and folders)
     root_elements = set()
     for item in rarfile_content_filenamelist:
-        root_elements.add(item.split("\\")[0])
+        # TODO
+        # TRY
+        root_elements.add(item.split("\\", 1)[0])
+        #root_elements.add(item.split("\\")[0])
     return root_elements
 
 
@@ -1353,6 +1361,21 @@ def database_import_rar_content_extended(p, p_id):
         app.session.add(db_item)
 
 
+def test_is_rar_root_element(projects):
+    print("test_is_rar_root_element")
+    for p in projects:
+        rar = rarfile.RarFile(p.filesystem_file_path)
+
+        print(f"{p.filename}")
+        for e in rar.namelist():
+            if is_rar_root_element(e):
+                # print(f"\t{e}is root element")
+                print("\t{:<55} [root element]".format(e))
+        print()
+            
+
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
@@ -1386,6 +1409,14 @@ if __name__ == '__main__':
     ## sort Projects
     ##
     app.projects_sorted = main_sort(app.projects)
+
+    ##
+    ## Test new efficient is_rar_root_element() Function
+    ##
+    test_is_rar_root_element(app.projects_sorted)
+    while input("FORCED STOP AFTER DB INIT (continue with 'y')") != "y":
+        print("database created...")
+        pass
 
     ##
     ## Database creation and import
