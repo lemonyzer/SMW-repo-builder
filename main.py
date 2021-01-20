@@ -131,8 +131,13 @@ def read_rar_specific_details_from_system_path(project):
         print(result)
         if result:
             project.rar_extended_infolist = result["ex_infolist"]
+            project.rar_to_extract_namelist = result["filteredmembers"]
+            project.rar_not_to_extract_namelist = result["excludedmembers"]
         else:
             project.rar_extended_infolist = list()
+            project.rar_to_extract_namelist = rar.namelist()
+            project.rar_not_to_extract_namelist = list()
+
         
         # TODO: append / extend ...
         app._global_rar_root_elements.extend(root_elements)
@@ -430,7 +435,7 @@ def git_repo_exists(repo_system_path):
     return repoExists
 
 
-def extract_project(proj, extract_destination_system_path, use_custom_filter=False):
+def extract_project(proj, extract_destination_system_path, use_filtered_namelist=True):
     # extract rar-file to targetDir\rar-file-name\
     project_extract_path = extract_destination_system_path + "\\" + proj.filename
     project_extract_path = project_extract_path[:-4]
@@ -438,18 +443,20 @@ def extract_project(proj, extract_destination_system_path, use_custom_filter=Fal
     proj.extraction_destination = project_extract_path
     rarf = rarfile.RarFile(proj.filesystem_file_path)
     
-    if (use_custom_filter):
+    if (use_filtered_namelist):
         # !!!
         # TODO filter_unescessary_files_from_rar already executed, results NOT stored in project.....
         # TODO store restults 
         #
-        filtered_members = filter_unescessary_files_from_rar(proj, rarf)["filteredmembers"]
-        print("filtered_members {} / {}".format(len(filtered_members), len(rarf.namelist())))
+        # filtered_members = filter_unescessary_files_from_rar(proj, rarf)["filteredmembers"]
+        # DONE
+        filtered_members = proj.rar_to_extract_namelist
+        print("filtered_members {} / {} are going to get extracted...".format(len(filtered_members), len(rarf.namelist())))
         rarf.extractall(project_extract_path, members=filtered_members)
     else:
         rarf.extractall(project_extract_path)
 
-    sys_command("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_custom_filter), proj.filesystem_file_path, extract_destination_system_path))
+    sys_command("extract (use_filter={}) {} ------> .... rarf.extractall .... {})".format(str(use_filtered_namelist), proj.filesystem_file_path, extract_destination_system_path))
 
 
 def max_level(checkLevel, arrayLength):
@@ -487,6 +494,7 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
             for member in rar_file.infolist():
                 member_is_root_element = False
+                # TODO: optimizable? 
                 if member.filename in proj.rar_root_elements:
                     member_is_root_element = True
                 ex_rar_info = ExtendedRarInfo(member.filename, member.date_time, member.file_size, member_is_root_element, True)
@@ -1029,7 +1037,7 @@ def main_read_directory():
     wait_for_input("app.projects, continue?")
     
 
-def main_sort():
+def main_sort(projects):
     ##
     ## sort Projects
     ##
@@ -1037,7 +1045,7 @@ def main_sort():
 
     if sort_show_projects:
         print("projects (unsorted)")
-        print_projects(app.projects)
+        print_projects(projects)
 
     ###
     ### sort Projects: Method A (inline sorting)
@@ -1047,11 +1055,13 @@ def main_sort():
     ###
     ### sort Projects: Method B (sort copy)
     ###
-    app.projects_sorted = sorted(app.projects, key=operator.attrgetter('filesystem_timestamp_modified'))  # sort copy
+    projects_sorted = sorted(projects, key=operator.attrgetter('filesystem_timestamp_modified'))  # sort copy
     
     if sort_show_projects:
         print("projects Sorted")
-        print_projects(app.projects_sorted)
+        print_projects(projects_sorted)
+    
+    return projects_sorted
 
 
 def main_visual_sort_check():
@@ -1118,11 +1128,11 @@ def main_load():
     wait_for_input("check loaded projects list [yes,no]:")
 
 
-def main_visual_check_rar_root_elements():
+def main_visual_check_rar_root_elements(projects):
     ##
     ## show RAR content: root elements
     ##
-    projects = app._project_list_loaded
+    # projects = app._project_list_loaded
     showRARArchiveRootFolder = True
     print()
     print("show RAR content: root elements")
@@ -1157,7 +1167,7 @@ def main_visual_check_rar_root_elements():
     wait_for_input("check root elements [yes,no]:")
 
 
-def main_visual_check_compare_sort_and_timestamps():
+def main_visual_check_compare_sort_and_timestamps(projects):
     ##
     ## compare timestamps
     ## * timestamp:
@@ -1167,7 +1177,7 @@ def main_visual_check_compare_sort_and_timestamps():
     ##              TODO: display last modified file from rar content
     ## * order (sorted by filesystem)
     ##
-    projects = app._project_list_loaded
+    # projects = app._project_list_loaded
     print()
     print(" ! IMPORTANT !")
     print(" ! please check timestamps, especially for !!! marked entries      !")
@@ -1297,7 +1307,10 @@ def database_import(project_list):
 
 
 def database_import_rar_content(p, p_id):
+    '''
+    source: rar.infolist()
 
+    '''
     rar = rarfile.RarFile(p.filesystem_file_path)
     
     for rared_element in rar.infolist():
@@ -1317,6 +1330,10 @@ def database_import_rar_content(p, p_id):
 
 
 def database_import_rar_content_extended(p, p_id):
+    '''
+    source: project.rar_extended_infolist()
+
+    '''
    
     for ex_rared_element in p.rar_extended_infolist:
 
@@ -1343,10 +1360,6 @@ if __name__ == '__main__':
     
     database_reinit()
 
-    app.system_path_rar_files
-    app.system_path_repo
-    app.system_path_extraction
-
     # command_line_interface()
 
     # @echo off
@@ -1368,34 +1381,41 @@ if __name__ == '__main__':
     ## read directory
     ##
     main_read_directory()
-    database_import(app.projects)
 
     ##
     ## sort Projects
     ##
-    main_sort()
+    app.projects_sorted = main_sort(app.projects)
 
-    x = input(message)
+    ##
+    ## Database creation and import
+    ##
+    database_import(app.projects_sorted)
+    x = input("database created")
+
+    while input("FORCED STOP AFTER DB INIT (continue with 'y')") != "y":
+        print("database created...")
+        pass
 
     ##
     ## save
     ##
-    main_save()
+    # main_save()
     
     ##
     ## load
     ##
-    main_load()
+    # main_load()
 
     ##
     ## show RAR content: root elements
     ##
-    main_visual_check_rar_root_elements()
+    main_visual_check_rar_root_elements(app.projects_sorted)
 
     ##
     ## compare timestamps
     ##
-    main_visual_check_compare_sort_and_timestamps()
+    main_visual_check_compare_sort_and_timestamps(app.projects_sorted)
 
     ##
     ##  Workflow
@@ -1404,20 +1424,18 @@ if __name__ == '__main__':
     ##       git adding
     ##       git commiting
     ##
-    projects = app._project_list_loaded
-
     wait_for_input("start workflow? [yes,no]:")
 
     while input("FORCED STOP BEFORE WORKFLOW STARTS (continue with 'y')") != "y":
         pass
 
     gitcmds = list()
-    workflow(projects, app.system_path_extraction, app.system_path_repo)     
+    workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     
 
     print("gitcmds")
     for i in gitcmds:
         print(i)
 
     print("extraction_destination_respective_repo_root_path")
-    for p in projects:
+    for p in app.projects_sorted:
         print(str(p.extraction_destination_respective_repo_root_path))

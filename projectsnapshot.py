@@ -37,6 +37,8 @@ class ProjectSnapshot:
     _rar_is_rar_file = False
     _rar_root_elements = list()
     _rar_extended_infolist = None
+    _rar_to_extract_namelist = list()
+    _rar_not_to_extract_namelist = list()
 
     _extraction_destination = ""
     _extraction_destination_respective_repo_root_path = ""
@@ -134,7 +136,23 @@ class ProjectSnapshot:
     @rar_extended_infolist.setter
     def rar_extended_infolist(self, newlist):
         self._rar_extended_infolist = newlist
-        
+    
+    @property
+    def rar_to_extract_namelist(self):
+        return self._rar_to_extract_namelist
+
+    @rar_to_extract_namelist.setter
+    def rar_to_extract_namelist(self, newlist):
+        self._rar_to_extract_namelist = newlist
+
+    @property
+    def rar_not_to_extract_namelist(self):
+        return self._rar_not_to_extract_namelist
+
+    @rar_not_to_extract_namelist.setter
+    def rar_not_to_extract_namelist(self, newlist):
+        self._rar_not_to_extract_namelist = newlist
+    
 
     @property
     def extraction_destination(self):
