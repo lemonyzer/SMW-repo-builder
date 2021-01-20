@@ -1139,36 +1139,34 @@ def main_visual_check_rar_root_elements(projects):
     ## show RAR content: root elements
     ##
     # projects = app._project_list_loaded
-    showRARArchiveRootFolder = True
     print()
     print("show RAR content: root elements")
     
-    if showRARArchiveRootFolder:
-        num_of_rar_files = 0
-        for p in projects:
-            if p.rar_is_rar_file:
-                num_of_rar_files = num_of_rar_files + 1
-        print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
-        print()
+    num_of_rar_files = 0
+    for p in projects:
+        if p.rar_is_rar_file:
+            num_of_rar_files = num_of_rar_files + 1
+    print("{:<30}: {}".format("num_of_rar_files", num_of_rar_files))
+    print()
 
-        print("RAR global_rar_root_elements (all projects summarized)")
-        for item in set(app._global_rar_root_elements):
-            print("\t{}".format(item))  # hide duplicates from list
-        print()
+    print("RAR global_rar_root_elements (all projects summarized)")
+    for item in set(app._global_rar_root_elements):
+        print("\t{}".format(item))  # hide duplicates from list
+    print()
 
-        print("RAR root elements folders/files by project")
-        print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
-        for p in projects:
-            if len(p.rar_root_elements) == 1:
-                print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
-            elif len(p.rar_root_elements) > 1:
-                print("{:<130} {:<55} {}".format(p.filename, "------------------------------------------------", len(p.rar_root_elements)))
-                i = 0
-                for e in p.rar_root_elements:
-                    i += 1
-                    print("{:<127} [{}] {:<55}".format("|>", i, e))
-            else:
-                print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
+    print("RAR root elements folders/files by project")
+    print("{:<130} {:<55} {}".format("file", "root folder", "amount of root Elements"))
+    for p in projects:
+        if len(p.rar_root_elements) == 1:
+            print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
+        elif len(p.rar_root_elements) > 1:
+            print("{:<130} {:<55} {}".format(p.filename, "------------------------------------------------", len(p.rar_root_elements)))
+            i = 0
+            for e in p.rar_root_elements:
+                i += 1
+                print("{:<127} [{}] {:<55}".format("|>", i, e))
+        else:
+            print("{:<130} {:<55} {}".format(p.filename, ", ".join(p.rar_root_elements), len(p.rar_root_elements)))
 
     wait_for_input("check root elements [yes,no]:")
 
@@ -1216,6 +1214,7 @@ def main_visual_check_compare_sort_and_timestamps(projects):
         print("{:<25} {:<5} {:<20}\\  {:<80} {}".format(filesystem_timestamp, compareresult, fileNameTimestamp, "", p.filename))
 
         # RAR content: newest file
+        # TODO push analysation to beginning -> load_directory_list
         rar_content_newest_element = get_newest_timestamp_from_rar_content(p)
         
         if not rar_content_newest_element == None:
@@ -1409,32 +1408,23 @@ if __name__ == '__main__':
     app.projects_sorted = main_sort(app.projects)
 
     ##
-    ## Test new efficient is_rar_root_element() Function
-    ##
-    test_is_rar_root_element(app.projects_sorted)
-    while input("FORCED STOP AFTER DB INIT (continue with 'y')") != "y":
-        print("database created...")
-        pass
-
-    ##
     ## Database creation and import
     ##
     database_import(app.projects_sorted)
-    x = input("database created")
 
     while input("FORCED STOP AFTER DB INIT (continue with 'y')") != "y":
         print("database created...")
         pass
 
     ##
-    ## save
+    ## save 
     ##
-    # main_save()
+    # main_save()   # (deactivated, files get to big since filtered extraction namelist is cached in projectsnapshot object)
     
     ##
     ## load
     ##
-    # main_load()
+    # main_load()   # (deactivated, files get to big since filtered extraction namelist is cached in projectsnapshot object)
 
     ##
     ## show RAR content: root elements
@@ -1444,7 +1434,7 @@ if __name__ == '__main__':
     ##
     ## compare timestamps
     ##
-    main_visual_check_compare_sort_and_timestamps(app.projects_sorted)
+    # main_visual_check_compare_sort_and_timestamps(app.projects_sorted) # deactivated for producton runs, TODO need optimization
 
     ##
     ##  Workflow
@@ -1467,4 +1457,4 @@ if __name__ == '__main__':
 
     print("extraction_destination_respective_repo_root_path")
     for p in app.projects_sorted:
-        print(str(p.extraction_destination_respective_repo_root_path))
+        print("\t path = " + str(p.extraction_destination_respective_repo_root_path))

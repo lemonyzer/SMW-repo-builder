@@ -10,8 +10,8 @@ ORDER BY rar_date_time desc
 
 
 
-
 SELECT * FROM DB_RAR_Content WHERE 
+--cflag_will_be_extracted == "1" AND
 rar_filename like "%Library%" AND
 rar_filename not like "%\Library\metadata%" AND
 rar_filename not like "%\Library\ScriptAssemblies%" AND
