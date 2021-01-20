@@ -270,22 +270,9 @@ def get_timestamp_from_rar_root_elements(project):
     root_elements = project.rar_root_elements
     string_list = []
     for e in root_elements:
-        # https://www.saltycrane.com/blog/2008/11/python-datetime-time-conversions/
-        # Example:
-        # datetime object to string
-        # dt_obj = datetime(2008, 11, 10, 17, 53, 59)
-        # date_str = dt_obj.strftime("%Y-%m-%d %H:%M:%S")
-        #
-        # Example:
-        # time tuple to datetime object
-        # time_tuple = (2008, 11, 12, 13, 51, 18, 2, 317, 0)
-        # dt_obj = datetime(*time_tuple[0:6])
-        # print repr(dt_obj) 
+        
+        date_str = rar_datetime_to_datestr(rar.getinfo(e).date_time)       
 
-        # time tipe --> datetime object --> string       
-        time_tuple = rar.getinfo(e).date_time
-        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
-        date_str = dt_obj.strftime("%Y.%m.%d")
         string_list.append(f"{date_str}; {rar.getinfo(e).filename}")
 
     return string_list
@@ -871,7 +858,10 @@ def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
 def get_newest_elements_from_filtered_rar_infolist(rar_info_list):
 
     newest_rar_file = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+    newest_rar_file.date_time = datetime.datetime(2011, 11, 11, 11, 11, 11, 11111).timetuple()
     newest_rar_directory = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
+    newest_rar_directory.date_time = datetime.datetime(2011, 11, 11, 11, 11, 11, 11111).timetuple()
+
 
     for item in rar_info_list:
 
@@ -1312,9 +1302,8 @@ def main_visual_check_compare_sort_and_timestamps(projects):
         
         if not rar_content_newest_element == None:
 
-            time_tuple = rar_content_newest_element.date_time
-            dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
-            date_str = dt_obj.strftime("%Y.%m.%d")
+            date_str = rar_datetime_to_datestr(rar_content_newest_element.date_time)
+
             rar_content_newest_element_timestamp = date_str
             compareresult_rar_content = "NA"
             if rar_content_newest_element_timestamp == filesystem_timestamp:
@@ -1381,9 +1370,15 @@ def database_import(project_list):
             filename_project_name = p.filename_project_name, 
             filename_timestamp = p.filename_timestamp,
             filename_additional_info = p.filename_additional_info,
+
             filesystem_file_path = p.filesystem_file_path,
             filesystem_timestamp_modified = p.filesystem_timestamp_modified,
             filesystem_timestamp_modified_rfc2822 = p.filesystem_timestamp_modified_rfc2822,
+
+            rar_content_newest_file_element = p._rar_content_newest_file_element,
+            rar_content_newest_file_element_timestamp = rar_datetime_to_datestr(p._rar_content_newest_file_element_timestamp),
+            rar_content_newest_directory_element = p._rar_content_newest_directory_element,
+            rar_content_newest_directory_element_timestamp = rar_datetime_to_datestr(p._rar_content_newest_directory_element_timestamp),
 
             extraction_destination = p.extraction_destination,
             extraction_destination_respective_repo_root_path = p.extraction_destination_respective_repo_root_path)
@@ -1403,6 +1398,27 @@ def database_import(project_list):
 
     app.session.commit()
 
+def rar_datetime_to_datestr(rar_date_time):
+    # https://www.saltycrane.com/blog/2008/11/python-datetime-time-conversions/
+        # Example:
+        # datetime object to string
+        # dt_obj = datetime(2008, 11, 10, 17, 53, 59)
+        # date_str = dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+        #
+        # Example:
+        # time tuple to datetime object
+        # time_tuple = (2008, 11, 12, 13, 51, 18, 2, 317, 0)
+        # dt_obj = datetime(*time_tuple[0:6])
+        # print repr(dt_obj) 
+
+        # time tipe --> datetime object --> string
+
+    # dostime = unrarlib.dostime_to_timetuple(rar_date_time) # !!! NOT WORKING NEITHER !!!
+    time_tuple = rar_date_time
+    # print(time_tuple)
+    dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
+    date_str = dt_obj.strftime("%Y.%m.%d")
+    return date_str
 
 def database_import_rar_content(p, p_id):
     '''
@@ -1413,9 +1429,7 @@ def database_import_rar_content(p, p_id):
     
     for rared_element in rar.infolist():
 
-        time_tuple = rared_element.date_time
-        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
-        date_str = dt_obj.strftime("%Y.%m.%d")
+        date_str = rar_datetime_to_datestr(rared_element.date_time)
 
         db_item = DB_RAR_Content (
             id_rar_project = p_id,
@@ -1435,9 +1449,7 @@ def database_import_rar_content_extended(p, p_id):
    
     for ex_rared_element in p.rar_extended_infolist:
 
-        time_tuple = ex_rared_element._date_time
-        dt_obj = datetime.datetime(*time_tuple[0:3])    # FIX: data in time_tuple[4:6] doesn't represent the correct time. need to investigate
-        date_str = dt_obj.strftime("%Y.%m.%d")
+        date_str = rar_datetime_to_datestr(ex_rared_element._date_time)
 
         db_item = DB_RAR_Content (
             id_rar_project = p_id,
