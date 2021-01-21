@@ -9,7 +9,7 @@
   * DB Browser for SQLite
   * Excel / PowerBI with PowerQuery
 
-#Projects
+# Projects
 * RAR-Project Files (centralized localtion, subdirectorys allowed)
 
 # Instructions
