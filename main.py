@@ -806,7 +806,7 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"']
                 gitcmds.append("repo.git.commit " + " ".join(parts))
                 repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"')  # FIX --allow-empty (if rar files don't contain changes!)
-                #time.sleep(0.2)
+                
         # remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
 
@@ -1477,6 +1477,30 @@ def test_is_rar_root_element(projects):
         print()
             
 
+def export_gitcmds(gitcmds):
+
+    system_path_repo_building = app.system_path_repo + "\\" + app.system_path_repo_building
+    folder_exists = False
+    if not os.path.exists(system_path_repo_building):
+        try:
+            os.makedirs(system_path_repo_building)
+            folder_exists = True
+        except OSError as e:
+            # if e.errno != errno.EEXIST:
+            #     raise
+            print(e)
+    else:
+        folder_exists = True
+
+    if folder_exists:
+        file_path = system_path_repo_building + "\\" + app.logfile_gitcmds
+        with open(file_path, "w") as text_file:
+            for cmd in gitcmds:
+                text_file.write(cmd)
+    
+    # git add .
+    # git commit .... building details (history & log)
+
 
 
 # Press the green button in the gutter to run the script.
@@ -1564,3 +1588,8 @@ if __name__ == '__main__':
     print("extraction_destination_respective_repo_root_path")
     for p in app.projects_sorted:
         print("\t path = " + str(p.extraction_destination_respective_repo_root_path))
+
+
+    export_gitcmds(gitcmds)
+
+

@@ -15,6 +15,9 @@ class AppSettings:
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
 
+    system_path_repo_building = "_repo_building"
+    logfile_gitcmds = "gitcmd.log"
+
     engine = create_engine(system_path_database, echo=False)
     Base = declarative_base()
     Session = sessionmaker(bind=engine)
