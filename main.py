@@ -562,7 +562,8 @@ def find_project_repo_level(project_extracted_path):
     baseIsFirstLevel = ["Assets"]
 
     # if RootElement is on of the string in baseIsSecondLevel array, it is the repo Folder and we need to cd "change direction" on path deeper
-    baseIsSecondLevel = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean", "Changes SuperMarioWars 2015.04.07_5 to 2015.04.10_3"]
+    #baseIsSecondLevel = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean", "Changes SuperMarioWars 2015.04.07_5 to 2015.04.10_3"]
+    baseIsSecondLevel = ["SMWCharacterImport"]
 
     # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
     intersectResult = compare_intersect(directoryList, baseIsFirstLevel)
@@ -799,14 +800,14 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 commit_title = "{}".format(p.filename)  # TODO escape character, convert LF and RETURN to html code?
                 commit_body = escape(p.long_description())    # TODO escape character, convert LF and RETURN to html code?
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
-                git_command("git commit -m '{}' -m '{}' --date='{}' ".format(commit_title, commit_body, filesystem_timestamp))
-                print("filesystem_timestamp = " + filesystem_timestamp)
-                print('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp)
-                parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp]
+                git_command("git commit --allow-empty -m '{}' -m '{}' --date='{}' ".format(commit_title, commit_body, filesystem_timestamp))
+                #print("filesystem_timestamp = " + filesystem_timestamp)
+                #print('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', f'"{filesystem_timestamp}"')
+                parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"']
                 gitcmds.append("repo.git.commit " + " ".join(parts))
-                repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', filesystem_timestamp)  # FIX --allow-empty (if rar files don't contain changes!)
+                repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"')  # FIX --allow-empty (if rar files don't contain changes!)
                 #time.sleep(0.2)
-        remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
+        # remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
 
 def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
