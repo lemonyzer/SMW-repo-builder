@@ -794,6 +794,23 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 repo.git.add(A=True)        # same as git add .
                 gitcmds.append("repo.git.add(A=True)")
 
+
+                ##
+                if repo.is_dirty(untracked_files=True):
+                    print('is_dirty: Changes detected.')
+                else:
+                    print('NOT is_dirty')
+                    
+                    if i == 0:
+                        # first rar file is empty or all files are ignored... or previousely created repo already contains current rar file
+                        print(f"{p.filename} - first rar file is empty or all files are ignored... or previousely created repo already contains current rar file")
+                    elif i > 1:
+                        previouse_project = projectList[i-2]
+                        pe_log=f"{previouse_project.filename} === {p.filename}"
+                        print(pe_log)
+                        projects_equal.append(pe_log)
+                ##
+
                 #filesystem_timestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
                 filesystem_timestamp = p.filesystem_timestamp_modified_rfc2822
 
@@ -1600,11 +1617,16 @@ if __name__ == '__main__':
         pass
 
     gitcmds = list()
+    projects_equal = list()
     workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     
 
     print("gitcmds")
     for i in gitcmds:
         print(i)
+
+    print("projects equal")
+    for pe in projects_equal:
+        print(pe)
 
     print("extraction_destination_respective_repo_root_path")
     for p in app.projects_sorted:
