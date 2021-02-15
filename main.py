@@ -809,6 +809,9 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                         pe_log=f"{previouse_project.filename} === {p.filename}"
                         print(pe_log)
                         projects_equal.append(pe_log)
+                        projects_equal.append(previouse_project.filesystem_file_path)
+                        projects_equal.append(p.filesystem_file_path)
+                        projects_equal.append("")
                 ##
 
                 #filesystem_timestamp = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).isoformat()
@@ -1514,7 +1517,7 @@ def test_is_rar_root_element(projects):
         print()
             
 
-def export_gitcmds(gitcmds):
+def export_loglist_to_file(log_list, log_filename):
 
     system_path_repo_building = app.system_path_repo + "\\" + app.system_path_repo_building
     folder_exists = False
@@ -1530,10 +1533,10 @@ def export_gitcmds(gitcmds):
         folder_exists = True
 
     if folder_exists:
-        file_path = system_path_repo_building + "\\" + app.logfile_gitcmds
+        file_path = system_path_repo_building + "\\" + log_filename
         with open(file_path, "w") as text_file:
-            #text_file.writelines(gitcmds)
-            for cmd in gitcmds:
+            #text_file.writelines(log_list)
+            for cmd in log_list:
                 text_file.write(f"{cmd}\n")
     
     # git add .
@@ -1633,6 +1636,8 @@ if __name__ == '__main__':
         print("\t path = " + str(p.extraction_destination_respective_repo_root_path))
 
 
-    export_gitcmds(gitcmds)
+    export_loglist_to_file(gitcmds,app.logfile_gitcmds)
+    export_loglist_to_file(projects_equal,app.logfile_projects_with_identical_repo)
+    
 
 

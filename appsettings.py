@@ -17,6 +17,7 @@ class AppSettings:
 
     system_path_repo_building = "_repo_building"
     logfile_gitcmds = "gitcmd.log"
+    logfile_projects_with_identical_repo = "projects_with_identical_repo.log"
 
     engine = create_engine(system_path_database, echo=False)
     Base = declarative_base()
