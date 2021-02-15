@@ -1515,8 +1515,9 @@ def export_gitcmds(gitcmds):
     if folder_exists:
         file_path = system_path_repo_building + "\\" + app.logfile_gitcmds
         with open(file_path, "w") as text_file:
+            #text_file.writelines(gitcmds)
             for cmd in gitcmds:
-                text_file.write(cmd)
+                text_file.write(f"{cmd}\n")
     
     # git add .
     # git commit .... building details (history & log)
