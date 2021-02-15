@@ -15,7 +15,7 @@ from pathlib import Path, PurePath
 from unrar import rarfile
 from unrar import unrarlib
 import shutil
-from git import Repo, NoSuchPathError, InvalidGitRepositoryError
+from git import Repo, NoSuchPathError, InvalidGitRepositoryError, Actor
 
 import json
 import jsonpickle
@@ -800,12 +800,32 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 commit_title = "{}".format(p.filename)  # TODO escape character, convert LF and RETURN to html code?
                 commit_body = escape(p.long_description())    # TODO escape character, convert LF and RETURN to html code?
                 # argument: --date = "Sat Nov 14 14:00 2015 +0100"
-                git_command("git commit --allow-empty -m '{}' -m '{}' --date='{}' ".format(commit_title, commit_body, filesystem_timestamp))
+                #m_git_cmd = "--allow-empty -m '{}' -m '{}' --date='{}' ".format(commit_title, commit_body, filesystem_timestamp)
+                m_git_cmd_parts = ['--allow-empty', '-m', f'"{commit_title}"', '--date', f'"{filesystem_timestamp}"']
+                m_git_cmd = " ".join(m_git_cmd_parts)
+                git_command(m_git_cmd)
                 #print("filesystem_timestamp = " + filesystem_timestamp)
                 #print('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_title}"', '--date', f'"{filesystem_timestamp}"')
-                parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"']
-                gitcmds.append("repo.git.commit " + " ".join(parts))
-                repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"')  # FIX --allow-empty (if rar files don't contain changes!)
+                #parts = ['--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"']
+                #gitcmds.append("repo.git.commit " + " ".join(parts))
+                gitcmds.append("repo.git.commit (git commit) " + m_git_cmd)
+                #repo.git.commit('--allow-empty', '-m', f'"{commit_title}"', '-m', f'"{commit_body}"', '--date', f'"{filesystem_timestamp}"')  # FIX --allow-empty (if rar files don't contain changes!)
+
+                # set environment variables
+                os.environ["GIT_AUTHOR_DATE"] = f'"{filesystem_timestamp}"'
+                os.environ["GIT_COMMITTER_DATE"] = f'"{filesystem_timestamp}"'
+                # git native
+                repo.git.commit(m_git_cmd_parts)
+
+                # gitpython command: (doesn't work with environment-variable commit date rfc 2822 format!...)
+                #repo.index.commit(commit_title)
+
+                #actor = Actor("Bob", "Bob@McTesterson.dev" )
+                #repo.index.commit(commit_title, author=actor, committer=actor, commit_date=filesystem_timestamp)
+                #commit_date_as_text = datetime.datetime.fromtimestamp(p.filesystem_timestamp_modified).strftime('%Y-%m-%d %H:%M:%S %z')
+                #repo.index.commit(commit_title, author=actor, committer=actor, commit_date=commit_date_as_text)
+                #repo.index.commit(commit_title, author=actor, committer=actor, commit_date=datetime.date(2020, 7, 21).strftime('%Y-%m-%d %H:%M:%S'))
+                
                 
         # remove_all_project_files_from_repo(repo_system_path)  # delete last project extracted files
 
