@@ -562,8 +562,8 @@ def find_project_repo_level(project_extracted_path):
     baseIsFirstLevel = ["Assets"]
 
     # if RootElement is on of the string in baseIsSecondLevel array, it is the repo Folder and we need to cd "change direction" on path deeper
-    #baseIsSecondLevel = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean", "Changes SuperMarioWars 2015.04.07_5 to 2015.04.10_3"]
-    baseIsSecondLevel = ["SMWCharacterImport"]
+    baseIsSecondLevel = ["SuperMarioWars", "SuperMarioWars_UnityNetwork", "SuperMarioWars 2015.04.08_1_Changes", "SuperMarioWars_clean", "Changes SuperMarioWars 2015.04.07_5 to 2015.04.10_3"]
+    #baseIsSecondLevel = ["SMWCharacterImport"]
 
     # https://stackoverflow.com/questions/1388818/how-can-i-compare-two-lists-in-python-and-return-matches
     intersectResult = compare_intersect(directoryList, baseIsFirstLevel)

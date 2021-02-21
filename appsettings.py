@@ -9,8 +9,8 @@ class AppSettings:
     # system_path_database = 'sqlite:///:memory:'               # database in memory
     system_path_database = 'sqlite:///R:/rar-projects.db'       # database on disk
 
-    system_path_rar_files = "R:\\SMW-CI-Test"                      # test environment
-    # system_path_rar_files = "R:\\SuperMarioWars"              # production
+    #system_path_rar_files = "R:\\SMW-CI-Test"                      # test environment
+    system_path_rar_files = "R:\\SuperMarioWars"              # production
     
     system_path_repo = "R:\\repoTest"
     system_path_extraction = "R:\\extractTest"
