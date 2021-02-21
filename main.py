@@ -101,12 +101,19 @@ def read_project_details_from_system_path(file_system_path):
     proj_info = filename_properties["additional_info"]              # get_project_additional_info_from_filename(file_path.name)
 
     # Analyze file system
-    # CrystalQuest_2015.02.01_check - exception
+    # Timestamp exceptions:
+    # * CrystalQuest_2015.02.01_check
+    # * uNet Sandbox_ramstein_7z_8_somthing_between_7and8.rar
     if file_path.name == "CrystalQuest_2015.02.01_check.rar":
         print(f"replacing timestamp: {file_path.name}")
         # date : 2015-02-01T01:01:01+00:00
         # unix : 1422752461
         proj_timestamp_from_filesystem = 1422752461
+    elif file_path.name == "uNet Sandbox_ramstein_7z_8_somthing_between_7and8.rar":
+        print(f"replacing timestamp: {file_path.name}")
+        # date : 2016-03-03T12:00:00+00:00
+        # unix : 1457006400
+        proj_timestamp_from_filesystem = 1457006400
     else:
         proj_timestamp_from_filesystem = get_timestamp_from_filesystem(str(file_path))
     
