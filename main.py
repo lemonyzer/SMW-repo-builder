@@ -101,7 +101,15 @@ def read_project_details_from_system_path(file_system_path):
     proj_info = filename_properties["additional_info"]              # get_project_additional_info_from_filename(file_path.name)
 
     # Analyze file system
-    proj_timestamp_from_filesystem = get_timestamp_from_filesystem(str(file_path))
+    # CrystalQuest_2015.02.01_check - exception
+    if file_path.name == "CrystalQuest_2015.02.01_check.rar":
+        print(f"replacing timestamp: {file_path.name}")
+        # date : 2015-02-01T01:01:01+00:00
+        # unix : 1422752461
+        proj_timestamp_from_filesystem = 1422752461
+    else:
+        proj_timestamp_from_filesystem = get_timestamp_from_filesystem(str(file_path))
+    
     proj_timestamp_from_filesystem_rfc2822 = formatdate(proj_timestamp_from_filesystem, True)
 
     # store data in project
