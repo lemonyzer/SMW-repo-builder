@@ -481,6 +481,9 @@ def max_level(checkLevel, arrayLength):
 
 def filter_unescessary_files_from_rar(proj, rar_file):
     exclusions = ["Library", "Temp", "Obj", "Build", "Builds", "Logs", "User Settings", ".vs", ".gradle"]
+    # XORO Project (Java compiled)
+    exclusions.append("out")
+
     debug = False
     #for m in rar_file.namelist():
     #    print(f'{m}')
@@ -569,18 +572,24 @@ def find_project_repo_level_crystal_quest(project_extraced_path):
     # 
     # we are searching for the first occurence of the folder "Assets" - if there are more than one Assets folder .... only the first found is used as reference point
     # all project should contain it. in crystal quest rar-project-snapshots this is the case.
-    result = recursive_search_assets_folder(project_extraced_path)
+    
+    # Unity Projects... (carefull! not all... some SMW Projectsnapshot doesn't contain Assets folder!)
+    #folder_name = "Assets"
+
+    # XORO Project:
+    folder_name = "untitled"
+    result = recursive_search_folder(project_extraced_path, folder_name)
 
     if result is None:
         # Asset folder not found, use extracted root folder...
-        print("{:<30} {}".format(str(project_extraced_path), "... ASSET-Folder NOT FOUND, use root as repo Level ..."))
+        print("{:<30} {}{}".format(str(project_extraced_path), folder_name, "-Folder NOT FOUND, use root as repo Level ..."))
         return Path(project_extraced_path)
     else:
         # Asset folder found
         return Path(result)
 
 
-def recursive_search_assets_folder(system_path):
+def recursive_search_folder(system_path, folder_name):
     # iterates (recursive) through all folders in system_path and searchs folder with name "Assets"
     # returns parent folder if found
     # returns root folder if not found
@@ -595,13 +604,13 @@ def recursive_search_assets_folder(system_path):
     for entry in parent_path.iterdir():
         if entry.is_dir():
             print("{:<30}: {} {}".format(str(parent_path), "directory", entry.name))
-            if entry.name == "Assets":
+            if entry.name == folder_name:
                 # Asset folder found -> return partent_path
                 print("{:<30}: {} {}".format(str(parent_path), "directory", entry.name))
                 return system_path
             else:
                 # not the Asset folder -> step into and search one level deeper
-                result = recursive_search_assets_folder(str(entry))
+                result = recursive_search_folder(str(entry), folder_name)
                 if result is None:
                     pass
                 else:
