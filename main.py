@@ -548,6 +548,53 @@ def filter_unescessary_files_from_rar(proj, rar_file):
 
     return namelist_seperated
 
+def find_project_repo_level_crystal_quest(project_extraced_path):
+    # impartant!
+    # since we are recursive searching...
+    # 
+    # we are searching for the first occurence of the folder "Assets" - if there are more than one Assets folder .... only the first found is used as reference point
+    # all project should contain it. in crystal quest rar-project-snapshots this is the case.
+    result = recursive_search_assets_folder(project_extraced_path)
+
+    if result is None:
+        # Asset folder not found, use extracted root folder...
+        print("{:<30} {}".format(str(project_extraced_path), "... ASSET-Folder NOT FOUND, use root as repo Level ..."))
+        return Path(project_extraced_path)
+    else:
+        # Asset folder found
+        return Path(result)
+
+
+def recursive_search_assets_folder(system_path):
+    # iterates (recursive) through all folders in system_path and searchs folder with name "Assets"
+    # returns parent folder if found
+    # returns root folder if not found
+    # difference between path.absolut() path.resolve()  https://discuss.python.org/t/pathlib-absolute-vs-resolve/2573
+    #                                                   https://stackoverflow.com/questions/42513056/how-to-get-absolute-path-of-a-pathlib-path-object
+    # print("{:<30} {}".format(system_path_rar_files, "... loading ..."))
+    parent_path = Path(system_path)
+    print("{:<30} {}".format(str(parent_path), "... loading ..."))
+
+    
+
+    for entry in parent_path.iterdir():
+        if entry.is_dir():
+            print("{:<30}: {} {}".format(str(parent_path), "directory", entry.name))
+            if entry.name == "Assets":
+                # Asset folder found -> return partent_path
+                print("{:<30}: {} {}".format(str(parent_path), "directory", entry.name))
+                return system_path
+            else:
+                # not the Asset folder -> step into and search one level deeper
+                result = recursive_search_assets_folder(str(entry))
+                if result is None:
+                    pass
+                else:
+                    # Asset Folder in subdirectory found
+                    return result
+
+    return None
+
 
 def find_project_repo_level(project_extracted_path):
     # TODO find repoLevel in extracted project structure
@@ -769,7 +816,13 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 # analyseExtractedPath(project_extracted_path)
                 # find root of repo
                 # sub-level for repo
-                project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+                
+                # crystal quest:
+                project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
+
+                # other projects:
+                #project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+
                 p.extraction_destination_respective_repo_root_path = project_extracted_path_repo_level
                 print("--- {:<50} : is repo base dir".format(str(project_extracted_path_repo_level)))
 
