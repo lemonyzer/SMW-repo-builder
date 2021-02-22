@@ -31,6 +31,25 @@ from models import DB_ProjectSnapshot, DB_RAR_Content
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
+import enum
+# Enum for size units
+class SIZE_UNIT(enum.Enum):
+   BYTES = 1
+   KB = 2
+   MB = 3
+   GB = 4
+
+def convert_unit(size_in_bytes, unit):
+   """ Convert the size from bytes to other units like KB, MB or GB"""
+   if unit == SIZE_UNIT.KB:
+       return size_in_bytes/1024
+   elif unit == SIZE_UNIT.MB:
+       return size_in_bytes/(1024*1024)
+   elif unit == SIZE_UNIT.GB:
+       return size_in_bytes/(1024*1024*1024)
+   else:
+       return size_in_bytes
+
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
@@ -846,10 +865,10 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                     project_extracted_path_repo_level = project_extracted_path
                 else:
                     # crystal quest:
-                    project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
+                    # project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
 
                     # other projects:
-                    #project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+                    project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
 
                 p.extraction_destination_respective_repo_root_path = project_extracted_path_repo_level
                 print("--- {:<50} : is repo base dir".format(str(project_extracted_path_repo_level)))
@@ -868,7 +887,14 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 # Fix:
                 for entry in p.extraction_destination_respective_repo_root_path.iterdir():
                     # print("move " + str(entry))
-                    shutil.move(str(entry), repo_system_path)
+                    # exclude files > 100 mb
+                    size_in_byte = entry.stat().st_size
+                    size_in_mb = convert_unit(size_in_byte, SIZE_UNIT.MB)
+                    github_filelimit_in_mb = 100.00
+                    if (size_in_mb < github_filelimit_in_mb):
+                        shutil.move(str(entry), repo_system_path)
+                    else:
+                        excluded_files.append(f"{p.filename},{entry.name},{size_in_mb}MB")
 
 
                 git_command("git add .")
@@ -1700,6 +1726,8 @@ if __name__ == '__main__':
     while input("FORCED STOP BEFORE WORKFLOW STARTS (continue with 'y')") != "y":
         pass
 
+    
+    excluded_files = list()
     gitcmds = list()
     projects_equal = list()
     workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     
@@ -1719,6 +1747,7 @@ if __name__ == '__main__':
 
     export_loglist_to_file(gitcmds,app.logfile_gitcmds)
     export_loglist_to_file(projects_equal,app.logfile_projects_with_identical_repo)
+    export_loglist_to_file(excluded_files,app.logfile_excluded_files)
     
 
 
