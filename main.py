@@ -30,6 +30,8 @@ from models import DB_ProjectSnapshot, DB_RAR_Content
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
+import sys
+# Logger
 
 import enum
 # Enum for size units
@@ -49,6 +51,24 @@ def convert_unit(size_in_bytes, unit):
        return size_in_bytes/(1024*1024*1024)
    else:
        return size_in_bytes
+
+
+
+
+class Logger(object):
+    def __init__(self, log_file):
+        self.terminal = sys.stdout
+        self.log = open(log_file, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+    def flush(self):
+        #this flush method is needed for python 3 compatibility.
+        #this handles the flush command by doing nothing.
+        #you might want to specify some extra behavior here.
+        pass    
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -888,13 +908,18 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 for entry in p.extraction_destination_respective_repo_root_path.iterdir():
                     # print("move " + str(entry))
                     # exclude files > 100 mb
-                    size_in_byte = entry.stat().st_size
-                    size_in_mb = convert_unit(size_in_byte, SIZE_UNIT.MB)
+                    entry_file_size_in_byte = entry.stat().st_size
+                    entry_file_size_in_mb = convert_unit(entry_file_size_in_byte, SIZE_UNIT.MB)
                     github_filelimit_in_mb = 100.00
-                    if (size_in_mb < github_filelimit_in_mb):
+                    if (entry_file_size_in_mb < github_filelimit_in_mb):
                         shutil.move(str(entry), repo_system_path)
                     else:
-                        excluded_files.append(f"{p.filename},{entry.name},{size_in_mb}MB")
+                        # skip file
+                        
+                        # posible optimization: project releated excluded files list
+                        # p.exluded_files.add/append(entry,reason:"filesize{filesize_in_mb} > githublimit")
+                        # combine later, after project loop in excluded_files list...
+                        excluded_files.append(f"{p.filename},{entry.name},{entry_file_size_in_mb}MB")
 
 
                 git_command("git add .")
@@ -1656,6 +1681,8 @@ if __name__ == '__main__':
 
     app = AppSettings()
     
+    sys.stdout = Logger(app.system_path_logging + app.logfile_repobuilder_output)
+
     database_reinit()
 
     # command_line_interface()
