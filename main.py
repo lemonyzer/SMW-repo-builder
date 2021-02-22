@@ -174,6 +174,9 @@ def read_project_details_from_system_path(file_system_path):
     return currentProject
 
 
+# rar_extended_infolist         -> used for DATABASE.create
+# rar_to_extract_namelist       -> used for RAR.extract 
+# rar_not_to_extract_namelist   -> used for NOTHING
 def read_rar_specific_details_from_system_path(project):
 
     if rarfile.is_rarfile(project.filesystem_file_path):
@@ -910,20 +913,20 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 # shutil.move(str(p.extraction_destination_respective_repo_root_path.resolve()), repo_system_path)
                 # Fix:
                 for entry in p.extraction_destination_respective_repo_root_path.iterdir():
-                    # print("move " + str(entry))
-                    # exclude files > 100 mb
-                    entry_file_size_in_byte = entry.stat().st_size
-                    entry_file_size_in_mb = convert_unit(entry_file_size_in_byte, SIZE_UNIT.MB)
-                    github_file_size_limit_in_mb = 100.00
-                    if (entry_file_size_in_mb < github_file_size_limit_in_mb):
-                        shutil.move(str(entry), repo_system_path)
-                    else:
-                        # skip file
-                        
-                        # posible optimization: project releated excluded files list
-                        # p.exluded_files.add/append(entry,reason:"filesize{filesize_in_mb} > githublimit")
-                        # combine later, after project loop in excluded_files list...
-                        excluded_files.append(f"{p.filename},{entry.name},{entry_file_size_in_mb}MB")
+#                    # print("move " + str(entry))
+#                    # exclude files > 100 mb
+#                    entry_file_size_in_byte = entry.stat().st_size
+#                    entry_file_size_in_mb = convert_unit(entry_file_size_in_byte, SIZE_UNIT.MB)
+#                    github_file_size_limit_in_mb = 100.00
+#                    if (entry_file_size_in_mb < github_file_size_limit_in_mb):
+                    shutil.move(str(entry), repo_system_path)
+#                    else:
+#                        # skip file
+#                        
+#                        # posible optimization: project releated excluded files list
+#                        # p.exluded_files.add/append(entry,reason:"filesize{filesize_in_mb} > githublimit")
+#                        # combine later, after project loop in excluded_files list...
+#                        excluded_files.append(f"{p.filename},{entry.name},{entry_file_size_in_mb}MB")
 
 
                 git_command("git add .")
@@ -1045,10 +1048,10 @@ def filter_files_bigger_than_github_limit(rar_info_list, filename_list):
         github_file_size_limit_in_mb = 100.00
         if (entry_file_size_in_mb < github_file_size_limit_in_mb):
             # keep rarinfo item
-            excluded_infolist.append(item)
+            pass
         else:
             # skip / remove rarinfo item
-            
+            excluded_infolist.append(item)
             # posible optimization: project releated excluded files list
             # p.exluded_files.add/append(entry,reason:"filesize{filesize_in_mb} > githublimit")
             # combine later, after project loop in excluded_files list...
