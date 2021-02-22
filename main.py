@@ -70,6 +70,14 @@ class Logger(object):
         #you might want to specify some extra behavior here.
         pass    
 
+    # https://stackoverflow.com/questions/14906764/how-to-redirect-stdout-to-both-file-and-console-with-scripting
+    # def start(self):
+    #     sys.stdout = self.Transcript(self.filename)
+
+    # def stop(self):
+    #     sys.stdout.log.close()
+    #     sys.stdout = sys.stdout.terminal
+
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
@@ -1819,6 +1827,8 @@ if __name__ == '__main__':
     export_loglist_to_file(projectsnapshot_with_repo_root_level,app.logfile_projectsnapshot_with_repo_root_level)
 
     # move stdout-Log to repo
+    sys.stdout.log.close()
+    sys.stdout = sys.stdout.terminal
     system_path_repo_building = app.system_path_repo + "\\" + app.system_path_repo_building
     shutil.move(str(app.system_path_logging + app.logfile_repobuilder_output), system_path_repo_building)
 
