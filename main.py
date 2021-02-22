@@ -758,7 +758,17 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
             print(" {:<3}/{:<3} ... {:<50} ... extracting".format(i, len(projectList), p.filename))
             ## wait_for_input("continue? [yes/No]:")
             ## clean up
-            remove_all_project_files_from_repo(repo_system_path)  # delete previous project files
+            ## clean up exclusion (incomplete project_snapshots)
+            incomplete_project_snapshot = False
+            incomplete_project_snapshot_filenames = ["SuperMarioWars 2014.09.27_13 CHANGES 11to13 Umzug Patrick Miriam.rar",
+                                                    "SuperMarioWars 2015.04.08_1_Changes.rar",
+                                                    "SuperMarioWars 2015.04.10_3 to 2015.04.07_5 Changes_ONLY.rar", 
+                                                    # "Maps_v15.rar", 
+                                                    "SuperMarioWars 2015.04.22_26-27 Between.rar"]
+            if p.filename in incomplete_project_snapshot_filenames:
+                incomplete_project_snapshot = True
+            else:
+                remove_all_project_files_from_repo(repo_system_path)  # delete previous project files
 
             extract_project(p, extract_destination_system_path)  # /projects/<rar-filename>/
             ## extract_destination_system_path
@@ -832,11 +842,14 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 # find root of repo
                 # sub-level for repo
                 
-                # crystal quest:
-                project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
+                if incomplete_project_snapshot:
+                    project_extracted_path_repo_level = project_extracted_path
+                else:
+                    # crystal quest:
+                    project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
 
-                # other projects:
-                #project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+                    # other projects:
+                    #project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
 
                 p.extraction_destination_respective_repo_root_path = project_extracted_path_repo_level
                 print("--- {:<50} : is repo base dir".format(str(project_extracted_path_repo_level)))
