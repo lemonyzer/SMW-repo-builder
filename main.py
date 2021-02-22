@@ -219,7 +219,12 @@ def read_rar_specific_details_from_system_path(project):
         
         results_3 = get_newest_elements_from_filtered_rar_infolist(results_2["filtered_infolist"])
 
-        project.rar_to_extract_namelist = filter_files_bigger_than_github_limit(results_2["filtered_infolist"], project.rar_to_extract_namelist)               # NEED TO BE VALIDATED 
+        
+        project.rar_to_extract_namelist = filter_files_bigger_than_github_limit(results_2["filtered_infolist"], project.rar_to_extract_namelist, project.rar_extended_infolist) # NEED TO BE VALIDATED 
+        # Updated... now rar_extended_info list gets updated, too
+        # Update: i think filter_files_bigger_than_github_limit doesn't need to return the list, since the list itself is modified
+        # TODO Test...
+        # filter_files_bigger_than_github_limit(results_2["filtered_infolist"], project.rar_to_extract_namelist, project.rar_extended_infolist) # NEED TO BE VALIDATED 
         # need to generated filterd p.rar_to_extract_namelist
         # ex_infolist, rar_to_extract_namelist, excludedmembers are now UNSYNC!
         
@@ -1057,7 +1062,7 @@ def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
     return results
 
 
-def filter_files_bigger_than_github_limit(rar_info_list, filename_list):
+def filter_files_bigger_than_github_limit(rar_info_list, filename_list, rar_extended_infolist):
     
     excluded_infolist = list()
 
@@ -1084,7 +1089,24 @@ def filter_files_bigger_than_github_limit(rar_info_list, filename_list):
         if e.filename in filename_list:
             print(f"XXXXXXXXXXXX {e.filename} found, will be removed from filename_list XXXXXXXXX")
             filename_list.remove(e.filename)
-    
+
+    if len(excluded_infolist) > 0:
+        print (f"XXXXXXXXXXXX excluded:{len(excluded_infolist)}, rar_extended_infolist:{len(rar_extended_infolist)}")
+        if len(rar_extended_infolist) == 0:
+            print (f"rar_extended_infolist:{len(rar_extended_infolist)} IS EMPTY")
+
+
+    # update rar_extended_infolist
+    excluded_namelist = list()
+    for e in excluded_infolist:
+        excluded_namelist.append(e.filename)
+
+    for exinfo in rar_extended_infolist:
+        if exinfo._filename in excluded_namelist:
+            print(f"XXXXXXXXXXXX {exinfo._filename} in exclusion list (filesize) found, _will_be_extracted will be set to False")
+            exinfo._will_be_extracted = False
+
+
     return filename_list
     
 
