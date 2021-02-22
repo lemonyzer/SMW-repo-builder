@@ -1779,4 +1779,8 @@ if __name__ == '__main__':
     export_loglist_to_file(excluded_files,app.logfile_excluded_files)
     export_loglist_to_file(projectsnapshot_with_repo_root_level,app.logfile_projectsnapshot_with_repo_root_level)
 
+    # move stdout-Log to repo
+    system_path_repo_building = app.system_path_repo + "\\" + app.system_path_repo_building
+    shutil.move(str(app.system_path_logging + app.logfile_repobuilder_output), system_path_repo_building)
+
 
