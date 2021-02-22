@@ -1833,3 +1833,7 @@ if __name__ == '__main__':
     shutil.move(str(app.system_path_logging + app.logfile_repobuilder_output), system_path_repo_building)
 
 
+    # last commit (with )
+    # git status
+    # git add .
+    # git commit -m "repo-build-logs added"
