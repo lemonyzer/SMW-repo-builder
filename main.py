@@ -207,6 +207,10 @@ def read_rar_specific_details_from_system_path(project):
 
         
         results_3 = get_newest_elements_from_filtered_rar_infolist(results_2["filtered_infolist"])
+
+        project.rar_to_extract_namelist = filter_files_bigger_than_github_limit(results_2["filtered_infolist"], project.rar_to_extract_namelist)               # NEED TO BE VALIDATED 
+        # need to generated filterd p.rar_to_extract_namelist
+        # ex_infolist, rar_to_extract_namelist, excludedmembers are now UNSYNC!
         
         project._rar_content_newest_directory_element = results_3["newest_rar_directory"].filename
         project._rar_content_newest_directory_element_timestamp = results_3["newest_rar_directory"].date_time
@@ -1028,6 +1032,37 @@ def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
     return results
 
 
+def filter_files_bigger_than_github_limit(rar_info_list, filename_list):
+    
+    excluded_infolist = list()
+
+    for item in rar_info_list:
+
+        # print("move " + str(entry))
+        # exclude files > 100 mb
+        entry_file_size_in_byte = item.file_size # uncompressed size
+        entry_file_size_in_mb = convert_unit(entry_file_size_in_byte, SIZE_UNIT.MB)
+        github_file_size_limit_in_mb = 100.00
+        if (entry_file_size_in_mb < github_file_size_limit_in_mb):
+            # keep rarinfo item
+            excluded_infolist.append(item)
+        else:
+            # skip / remove rarinfo item
+            
+            # posible optimization: project releated excluded files list
+            # p.exluded_files.add/append(entry,reason:"filesize{filesize_in_mb} > githublimit")
+            # combine later, after project loop in excluded_files list...
+            excluded_files.append(f"{item.filename},{entry_file_size_in_mb}MB")
+    
+    # remove files from extraction list
+    for e in excluded_infolist:
+        if e.filename in filename_list:
+            print(f"XXXXXXXXXXXX {e.filename} found, will be removed from filename_list XXXXXXXXX")
+            filename_list.remove(e.filename)
+    
+    return filename_list
+    
+
 def get_newest_elements_from_filtered_rar_infolist(rar_info_list):
 
     newest_rar_file = rarfile.RarInfo(unrarlib.RARHeaderDataEx())
@@ -1682,7 +1717,7 @@ if __name__ == '__main__':
     app = AppSettings()
     
     sys.stdout = Logger(app.system_path_logging + app.logfile_repobuilder_output)
-
+    
     database_reinit()
 
     # command_line_interface()
@@ -1705,6 +1740,7 @@ if __name__ == '__main__':
     ##
     ## read directory
     ##
+    excluded_files = list()
     main_read_directory()
 
     ##
@@ -1755,7 +1791,7 @@ if __name__ == '__main__':
 
     
     projectsnapshot_with_repo_root_level = list()
-    excluded_files = list()
+    
     gitcmds = list()
     projects_equal = list()
     workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     

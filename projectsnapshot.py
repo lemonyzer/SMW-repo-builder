@@ -37,7 +37,7 @@ class ProjectSnapshot:
     _rar_is_rar_file = False
     _rar_root_elements = list()
     _rar_extended_infolist = None
-    _rar_to_extract_namelist = list()
+    _rar_to_extract_namelist = list()                   # used in extraction process to define list of extracted files
     _rar_not_to_extract_namelist = list()
 
     _rar_content_newest_file_element = None
