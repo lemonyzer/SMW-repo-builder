@@ -898,6 +898,20 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                 
                 if incomplete_project_snapshot:
                     project_extracted_path_repo_level = project_extracted_path
+                    # new idea (works only for smw projectsnapshots...)
+                    # search for asset folder ...
+                    # if not found should use extracted as root (like current algo is doing)
+                    # so asset folder gets moved into repo asset-folder .... files get overwritten
+                    # currently not. this is a small tidy up.
+                    # i checked, no files would be missed out since all incomplete project snapshots have
+                    #  one root element - assets
+                    # or 
+                    #  two root elements but no assets folder
+                    # in case a incomplete projectsnapshot would contain two rootelements and one containing a assets folder
+                    # the first found assets folder would be used and the other would not be moved to repo!
+                    #
+                    # project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
+                    # 
                 else:
                     # crystal quest:
                     # project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
