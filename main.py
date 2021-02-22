@@ -910,8 +910,8 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                     # exclude files > 100 mb
                     entry_file_size_in_byte = entry.stat().st_size
                     entry_file_size_in_mb = convert_unit(entry_file_size_in_byte, SIZE_UNIT.MB)
-                    github_filelimit_in_mb = 100.00
-                    if (entry_file_size_in_mb < github_filelimit_in_mb):
+                    github_file_size_limit_in_mb = 100.00
+                    if (entry_file_size_in_mb < github_file_size_limit_in_mb):
                         shutil.move(str(entry), repo_system_path)
                     else:
                         # skip file
