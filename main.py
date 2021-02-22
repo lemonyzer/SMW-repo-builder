@@ -1727,27 +1727,29 @@ if __name__ == '__main__':
         pass
 
     
+    projectsnapshot_with_repo_root_level = list()
     excluded_files = list()
     gitcmds = list()
     projects_equal = list()
     workflow(app.projects_sorted, app.system_path_extraction, app.system_path_repo)     
 
-    print("gitcmds")
-    for i in gitcmds:
-        print(i)
+    # print("gitcmds")
+    # for i in gitcmds:
+    #     print(i)
 
     print("projects equal")
     for pe in projects_equal:
         print(pe)
 
-    print("extraction_destination_respective_repo_root_path")
+    # generate log
+    projectsnapshot_with_repo_root_level.append("extraction_destination_respective_repo_root_path")
     for p in app.projects_sorted:
-        print("\t path = " + str(p.extraction_destination_respective_repo_root_path))
+        projectsnapshot_with_repo_root_level.append(f"{p.filename},{str(p.extraction_destination_respective_repo_root_path)}")
 
-
+    # export logs
     export_loglist_to_file(gitcmds,app.logfile_gitcmds)
     export_loglist_to_file(projects_equal,app.logfile_projects_with_identical_repo)
     export_loglist_to_file(excluded_files,app.logfile_excluded_files)
-    
+    export_loglist_to_file(projectsnapshot_with_repo_root_level,app.logfile_projectsnapshot_with_repo_root_level)
 
 
