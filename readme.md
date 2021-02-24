@@ -17,3 +17,7 @@
 2. set UNRAR_LIB_PATH (Tutorial: https://stackoverflow.com/questions/55574212/how-to-set-path-to-unrar-library-in-python )
 3. customize paths in main.py
 4. run main.py
+
+# Flowchart
+https://github.com/lemonyzer/SMW-repo-builder/blob/incomplete-project-snapshots-handling/docs/_Flussdiagramm.pdf
+Link: https://docs.google.com/viewer?url=$https://github.com/lemonyzer/SMW-repo-builder/raw/incomplete-project-snapshots-handling/docs/_Flussdiagramm.pdf
