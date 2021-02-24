@@ -20,4 +20,3 @@
 
 # Flowchart
 https://github.com/lemonyzer/SMW-repo-builder/blob/incomplete-project-snapshots-handling/docs/_Flussdiagramm.pdf
-Link: https://docs.google.com/viewer?url=$https://github.com/lemonyzer/SMW-repo-builder/raw/incomplete-project-snapshots-handling/docs/_Flussdiagramm.pdf
