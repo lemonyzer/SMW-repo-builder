@@ -9,8 +9,8 @@ class AppSettings:
     # system_path_database = 'sqlite:///:memory:'               # database in memory
     system_path_database = 'sqlite:///R:/rar-projects.db'       # database on disk
 
-    #system_path_rar_files = "R:\\SMW-CI-Test"                      # Project: SMW-CharacterImporter (Refactored Character Sprite Import + Team Colored Sprites)
-    system_path_rar_files = "R:\\SuperMarioWars"                   # Project: SMW (2014-2016) - till seafile crash
+    system_path_rar_files = "R:\\SMWCharacterImporter"                      # Project: SMW-CharacterImporter (Refactored Character Sprite Import + Team Colored Sprites)
+    #system_path_rar_files = "R:\\SuperMarioWars"                   # Project: SMW (2014-2016) - till seafile crash
     #system_path_rar_files = "R:\\CrystalQuest"                      # Project: CrystalQuest (Bachelorarbeit)
     #system_path_rar_files = "R:\\uNetSandbox"                      # Project: uNetSandbox - script-generated Animation Controller
     

@@ -918,11 +918,19 @@ def workflow(projectList, extract_destination_system_path, repo_system_path):
                     # project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
                     # 
                 else:
-                    # crystal quest:
-                    # project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
+                    # Unity Projects:
+                    #  * Crystal Quest
+                    #  * uNet-Sandbox
+                    #  * SMWCharacterImporter
+                    # Other projects:
+                    #  * XORO-TCP-RTSP
+                    # uncomment following line
+                    project_extracted_path_repo_level = find_project_repo_level_crystal_quest(project_extracted_path)
 
-                    # other projects:
-                    project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
+                    # Unity Projects:
+                    #  * smw2k14-2k16
+                    # uncomment following line
+                    #project_extracted_path_repo_level = find_project_repo_level(project_extracted_path)
 
                 p.extraction_destination_respective_repo_root_path = project_extracted_path_repo_level
                 print("--- {:<50} : is repo base dir".format(str(project_extracted_path_repo_level)))
