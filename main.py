@@ -219,7 +219,7 @@ def read_rar_specific_details_from_system_path(project):
         
         results_3 = get_newest_elements_from_filtered_rar_infolist(results_2["filtered_infolist"])
 
-        
+        #project.rar_to_extract_namelist = filter_files_other_than_scripts(results_2["filtered_infolist"], project.rar_to_extract_namelist, project.rar_extended_infolist) # NEED TO BE VALIDATED 
         project.rar_to_extract_namelist = filter_files_bigger_than_github_limit(results_2["filtered_infolist"], project.rar_to_extract_namelist, project.rar_extended_infolist) # NEED TO BE VALIDATED 
         # Updated... now rar_extended_info list gets updated, too
         # Update: i think filter_files_bigger_than_github_limit doesn't need to return the list, since the list itself is modified
@@ -1061,6 +1061,18 @@ def get_root_elements_and_newest_elements_from_rar_infolist(rar_info_list):
 
     return results
 
+
+def filter_files_other_than_scripts(rar_info_list, filename_list, rar_extended_infolist):
+    
+    filtered_filename_list = list()
+
+    for item in filename_list:
+        if item.endswith(".cs"):
+            filtered_filename_list.append(item)
+    
+    filename_list = filtered_filename_list
+
+    return filtered_filename_list
 
 def filter_files_bigger_than_github_limit(rar_info_list, filename_list, rar_extended_infolist):
     
